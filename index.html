@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>SKELETOR'S CONQUEST: THE ROAD TO GRAYSKULL</title>
+<style>
+  /* ============================================================
+     GLOBAL / PAGE SHELL
+     A dark throne room of pure black to frame our retro canvas.
+  ============================================================ */
+  :root {
+    --bg: #05060a;
+    --bezel: #1a0f2e;
+    --glow: #7d4bd6;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  html, body {
+    width: 100%;
+    height: 100%;
+    background: radial-gradient(circle at 50% 40%, #150a24 0%, var(--bg) 70%);
+    overflow: hidden;
+    font-family: "Courier New", monospace;
+    color: #cbb6ef;
+    -webkit-user-select: none;
+    user-select: none;
+  }
+
+  #stage {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+  }
+
+  /* ============================================================
+     THE CANVAS — the window into Eternia.
+     Internal resolution is fixed retro hardware size; CSS scales
+     it up with crisp, un-blurred "pixelated" rendering.
+  ============================================================ */
+  #screen {
+    /* Crisp pixel scaling — no muscle-bound blur allowed! */
+    image-rendering: pixelated;
+    image-rendering: crisp-edges;
+    image-rendering: -moz-crisp-edges;
+    background: #000;
+    border: 4px solid var(--bezel);
+    box-shadow:
+      0 0 0 4px #000,
+      0 0 40px 4px rgba(125, 75, 214, 0.55),
+      inset 0 0 60px rgba(0, 0, 0, 0.6);
+    /* Actual on-screen size set by JS to an integer multiple. */
+  }
+
+  #hint {
+    margin-top: 10px;
+    font-size: 12px;
+    letter-spacing: 1px;
+    color: #5c4a82;
+    text-align: center;
+    line-height: 1.6;
+  }
+  #hint b { color: var(--glow); }
+
+  /* Loading placeholder shown before the engine seizes control. */
+  #boot {
+    position: absolute;
+    color: var(--glow);
+    font-size: 18px;
+    letter-spacing: 3px;
+    animation: pulse 1s infinite alternate;
+  }
+  @keyframes pulse { from { opacity: .35; } to { opacity: 1; } }
+</style>
+</head>
+<body>
+  <div id="stage">
+    <div id="boot">SUMMONING SNAKE MOUNTAIN…</div>
+    <!-- Virtual retro resolution: 320 x 240. Scaled by JS. -->
+    <canvas id="screen" width="320" height="240"></canvas>
+    <div id="hint">
+      <b>WASD</b> move / aim &nbsp;•&nbsp; <b>J</b> fire (hold) &nbsp;•&nbsp;
+      <b>K</b> jump &nbsp;•&nbsp; <b>SPACE</b> pause &nbsp;•&nbsp; <b>ENTER</b> start
+    </div>
+  </div>
+
+  <!-- The engine of dark conquest, split into a disciplined legion.
+       Loaded as classic scripts in dependency order — they share one global
+       scope, so no build step or server is needed. Just open this file. -->
+  <script src="src/config.js"></script>   <!-- constants, enums, palette -->
+  <script src="src/utils.js"></script>    <!-- math, AABB, draw helpers -->
+  <script src="src/input.js"></script>    <!-- keyboard + 8-dir aiming -->
+  <script src="src/camera.js"></script>   <!-- 2D camera + depth projector -->
+  <script src="src/weapons.js"></script>  <!-- weapon fire factories -->
+  <script src="src/entities.js"></script> <!-- Player, Enemy, Projectile... -->
+  <script src="src/bosses.js"></script>   <!-- the three stage bosses -->
+  <script src="src/levels.js"></script>   <!-- level geometry + spawns -->
+  <script src="src/engine.js"></script>   <!-- GameEngine state machine -->
+  <script src="src/main.js"></script>     <!-- bootstrap -->
+
+</body>
+</html>

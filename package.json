@@ -1,0 +1,9 @@
+{
+  "name": "skeletors-conquest",
+  "version": "1.0.0",
+  "private": true,
+  "description": "SKELETOR'S CONQUEST: THE ROAD TO GRAYSKULL — an NES-style run-and-gun in vanilla JS + Canvas.",
+  "scripts": {
+    "test": "node --test tests/*.test.js"
+  }
+}
