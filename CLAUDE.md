@@ -76,7 +76,7 @@ level hits it.
 - `Weapons` (`weapons.js`) is a map keyed by the `WEAPON` enum; each entry is
   `{ name, cooldown, fire(engine, ox, oy, aim) }`. `fire` spawns projectiles via
   the engine. Death reverts the player to `WEAPON.DEFAULT` (one-hit death = weapon
-  loss); `BARRIER` is really 15s of i-frames that still fires default bolts.
+  loss); `BARRIER` is really 20s of i-frames that still fires default bolts.
 - **Bosses** (`bosses.js`) are the exception: standalone classes (not `Enemy`,
   no shared base) each with `update()`, `render(ctx, cam)`, and `hitTest(proj)`.
   The engine routes player shots to `boss.hitTest` and reads `boss.dead` for

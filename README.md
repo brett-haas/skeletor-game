@@ -33,6 +33,21 @@ Press **ENTER** on the title screen to begin.
 Aiming is decoupled from movement: run one way while firing another, in any of
 the eight directions.
 
+#### Touch (mobile)
+
+On touch-primary devices (phones, tablets) an on-screen control layer appears
+automatically: a left-thumb directional pad for 8-way move/aim, **FIRE** (hold)
+and **JUMP** buttons on the right, and a **❚❚** button for pause / start /
+continue. Touch input feeds the same controls as the keyboard, so nothing about
+gameplay changes.
+
+Detection uses the `pointer: coarse` media query, so keyboard-driven hybrid
+laptops keep the desktop layout. Override with a query string:
+
+- `index.html?touch` — force the touch overlay on (handy for testing on a
+  desktop with a mouse)
+- `index.html?touch=0` — force the desktop layout, even on a touch device
+
 ## Power-ups
 
 Defeated enemies may drop a weapon. Picking one up replaces your current
@@ -43,7 +58,7 @@ weapon; **dying reverts you to the default**.
 | **S** | Spread Curse | Five skull projectiles in a wide fan — great for crowds |
 | **L** | Light-Ring Laser | Slow, massive ring that pierces walls and enemies |
 | **F** | Flame Spit | Short-range, high-DPS stream — melts foes up close, useless at range |
-| **B** | Barrier | 15 seconds of invulnerability |
+| **B** | Barrier | 20 seconds of invulnerability |
 
 ## Levels
 
@@ -69,14 +84,14 @@ skeletor-game/
 ├── src/
 │   ├── config.js       # resolution, physics constants, enums, palette
 │   ├── utils.js        # math, AABB collision, shared draw helpers
-│   ├── input.js        # keyboard state + 8-directional aim vectoring
+│   ├── input.js        # keyboard/touch state + 8-directional aim vectoring
 │   ├── camera.js       # 2D follow-camera + (dormant) pseudo-3D projector
 │   ├── weapons.js      # the five weapon fire factories
 │   ├── entities.js     # Player, Projectile, Enemy, PowerUp, Particle
 │   ├── bosses.js       # Man-At-Arms, Sorceress & Stratos, He-Man & Battle Cat
 │   ├── levels.js       # Level base class + the three levels
 │   ├── engine.js       # GameEngine: state machine, main loop, systems, HUD
-│   └── main.js         # bootstrap
+│   └── main.js         # bootstrap + on-screen touch controls
 └── tests/              # integration test suite (see tests/README.md)
 ```
 
@@ -93,7 +108,8 @@ they share one global scope, so no bundler or import/export is required.
   entities) remains implemented and available for future use.
 - **Camera** with horizontal/vertical follow and hard world-clamping.
 - **Input** captured via a `Set` for precise concurrent multi-key aiming, with
-  edge-triggered presses for jump/pause/start.
+  edge-triggered presses for jump/pause/start. On-screen touch controls feed the
+  same `Set` via `input.press`/`input.release`, so the engine is input-agnostic.
 - **Collision:** axis-aligned bounding boxes (AABB) for side-scrolling levels.
 
 ## Tests
