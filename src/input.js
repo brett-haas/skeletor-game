@@ -35,6 +35,13 @@ class Input {
   tapped(code)   { return this.pressed.has(code); }
   endFrame()     { this.pressed.clear(); }
 
+  // ---- Synthetic input (on-screen touch controls) ----
+  // Touch buttons feed the SAME key Sets the keyboard does, so the engine
+  // never learns of their existence. `press` mirrors a keydown edge; `release`
+  // mirrors a keyup. Skeletor's will, delivered by fingertip or key alike.
+  press(code)   { if (!this.keys.has(code)) this.pressed.add(code); this.keys.add(code); }
+  release(code) { this.keys.delete(code); }
+
   // ---- Semantic control helpers (WASD + J/K/Space) ----
   get up()    { return this.held('KeyW') || this.held('ArrowUp'); }
   get down()  { return this.held('KeyS') || this.held('ArrowDown'); }

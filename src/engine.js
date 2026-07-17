@@ -58,8 +58,11 @@ class GameEngine {
 
   // Scale the virtual canvas to the largest integer multiple that fits.
   _fitCanvas() {
-    const margin = 80;
-    const maxW = window.innerWidth - 20;
+    // Touch controls float OVER the canvas, so reclaim the space the desktop
+    // hint bar would otherwise reserve. Guarded: the harness has no body.
+    const touch = document.body && document.body.classList && document.body.classList.contains('touch');
+    const margin = touch ? 8 : 80;
+    const maxW = window.innerWidth - (touch ? 4 : 20);
     const maxH = window.innerHeight - margin;
     let scale = Math.floor(Math.min(maxW / VW, maxH / VH));
     scale = Math.max(1, scale);

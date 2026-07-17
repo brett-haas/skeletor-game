@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
 <title>SKELETOR'S CONQUEST: THE ROAD TO GRAYSKULL</title>
 <style>
   /* ============================================================
@@ -66,6 +66,84 @@
   }
   #hint b { color: var(--glow); }
 
+  /* ============================================================
+     TOUCH CONTROLS — an on-screen legion for the fingertip army.
+     Hidden until JS detects a touch device (body.touch). They float
+     OVER the canvas so they steal no space from the window to Eternia.
+  ============================================================ */
+  #touch { display: none; }
+  body.touch #touch {
+    display: block;
+    position: fixed;
+    inset: 0;
+    z-index: 10;
+    pointer-events: none;   /* only the pads/buttons catch touches */
+    touch-action: none;
+  }
+  body.touch #hint { display: none; }
+
+  .tc {
+    position: absolute;
+    pointer-events: auto;
+    touch-action: none;
+    -webkit-user-select: none;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #e9dcff;
+    font-family: "Courier New", monospace;
+    font-weight: bold;
+    background: rgba(26, 15, 46, 0.55);
+    border: 2px solid rgba(125, 75, 214, 0.7);
+    box-shadow: 0 0 12px rgba(125, 75, 214, 0.35);
+    backdrop-filter: blur(2px);
+  }
+  .tc.active {
+    background: rgba(125, 75, 214, 0.55);
+    border-color: #cbb6ef;
+  }
+
+  /* Left thumb: an 8-way directional pad. */
+  #pad {
+    left: max(18px, env(safe-area-inset-left));
+    bottom: max(22px, env(safe-area-inset-bottom));
+    width: 132px; height: 132px;
+    border-radius: 50%;
+    background: rgba(26, 15, 46, 0.4);
+    border: 2px solid rgba(125, 75, 214, 0.5);
+  }
+  #pad .nub {
+    position: absolute;
+    width: 52px; height: 52px;
+    border-radius: 50%;
+    background: rgba(125, 75, 214, 0.8);
+    border: 2px solid #cbb6ef;
+    left: 50%; top: 50%;
+    transform: translate(-50%, -50%);
+    pointer-events: none;
+  }
+
+  /* Right thumb: FIRE (hold) + JUMP. */
+  #btnFire {
+    right: calc(max(18px, env(safe-area-inset-right)) + 96px);
+    bottom: max(26px, env(safe-area-inset-bottom));
+    width: 78px; height: 78px; border-radius: 50%; font-size: 15px;
+  }
+  #btnJump {
+    right: max(18px, env(safe-area-inset-right));
+    bottom: calc(max(26px, env(safe-area-inset-bottom)) + 44px);
+    width: 78px; height: 78px; border-radius: 50%; font-size: 15px;
+  }
+
+  /* Top-right: pause / start / continue (sends SPACE + ENTER). */
+  #btnMenu {
+    right: max(12px, env(safe-area-inset-right));
+    top: max(12px, env(safe-area-inset-top));
+    width: 54px; height: 40px; border-radius: 8px; font-size: 13px;
+  }
+
   /* Loading placeholder shown before the engine seizes control. */
   #boot {
     position: absolute;
@@ -86,6 +164,15 @@
       <b>WASD</b> move / aim &nbsp;•&nbsp; <b>J</b> fire (hold) &nbsp;•&nbsp;
       <b>K</b> jump &nbsp;•&nbsp; <b>SPACE</b> pause &nbsp;•&nbsp; <b>ENTER</b> start
     </div>
+  </div>
+
+  <!-- On-screen touch controls. Hidden until main.js confirms a touch device
+       and adds `touch` to <body>. They only manipulate the Input key Sets. -->
+  <div id="touch">
+    <div id="pad" class="tc"><div class="nub"></div></div>
+    <div id="btnFire" class="tc">FIRE</div>
+    <div id="btnJump" class="tc">JUMP</div>
+    <div id="btnMenu" class="tc">❚❚</div>
   </div>
 
   <!-- The engine of dark conquest, split into a disciplined legion.
