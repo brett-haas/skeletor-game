@@ -33,7 +33,7 @@ class Player {
   setWeapon(w) {
     this.weapon = w;
     if (w === WEAPON.BARRIER) {
-      this.barrierTime = 60 * 15;   // 15 seconds at 60fps
+      this.barrierTime = 60 * 20;   // 20 seconds at 60fps
       this.invuln = Math.max(this.invuln, this.barrierTime);
     }
   }

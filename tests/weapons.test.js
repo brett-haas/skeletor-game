@@ -47,11 +47,11 @@ test('firing sets the weapon-specific cooldown', () => {
   assert.equal(g.player.cooldown, Weapons[g.C.WEAPON.FLAME].cooldown);
 });
 
-test('BARRIER grants ~15s of invulnerability', () => {
+test('BARRIER grants ~20s of invulnerability', () => {
   const g = createGame();
   g.loadLevel(0);
   g.player.setWeapon(g.C.WEAPON.BARRIER);
-  assert.ok(g.player.barrierTime >= 60 * 14, 'roughly 15 seconds at 60fps');
+  assert.ok(g.player.barrierTime >= 60 * 19, 'roughly 20 seconds at 60fps');
   assert.ok(g.player.invulnerable, 'barrier makes you invulnerable');
 });
 
