@@ -81,6 +81,9 @@
     touch-action: none;
   }
   body.touch #hint { display: none; }
+  /* No craven bezel on a phone — the conquest fills the glass edge-to-edge. */
+  body.touch #screen { border: 0; box-shadow: none; }
+  body.touch #stage { padding: 0; }
 
   .tc {
     position: absolute;
@@ -109,14 +112,14 @@
   #pad {
     left: max(18px, env(safe-area-inset-left));
     bottom: max(22px, env(safe-area-inset-bottom));
-    width: 132px; height: 132px;
+    width: 108px; height: 108px;
     border-radius: 50%;
     background: rgba(26, 15, 46, 0.4);
     border: 2px solid rgba(125, 75, 214, 0.5);
   }
   #pad .nub {
     position: absolute;
-    width: 52px; height: 52px;
+    width: 42px; height: 42px;
     border-radius: 50%;
     background: rgba(125, 75, 214, 0.8);
     border: 2px solid #cbb6ef;
@@ -125,23 +128,26 @@
     pointer-events: none;
   }
 
-  /* Right thumb: FIRE (hold) + JUMP. */
+  /* Right thumb: FIRE (hold, lowest/rightmost for the resting thumb) + JUMP
+     up-and-left of it. Offsets give a clear gap on BOTH axes so the two never
+     crowd or overlap, however the safe-area insets land. */
   #btnFire {
-    right: calc(max(18px, env(safe-area-inset-right)) + 96px);
-    bottom: max(26px, env(safe-area-inset-bottom));
-    width: 78px; height: 78px; border-radius: 50%; font-size: 15px;
+    right: calc(max(18px, env(safe-area-inset-right)) + 98px);
+    bottom: max(18px, env(safe-area-inset-bottom));
+    width: 62px; height: 62px; border-radius: 50%; font-size: 13px;
   }
   #btnJump {
-    right: max(18px, env(safe-area-inset-right));
-    bottom: calc(max(26px, env(safe-area-inset-bottom)) + 44px);
-    width: 78px; height: 78px; border-radius: 50%; font-size: 15px;
+    right: calc(max(18px, env(safe-area-inset-right)) + 42px);
+    bottom: calc(max(18px, env(safe-area-inset-bottom)) + 46px);
+    width: 62px; height: 62px; border-radius: 50%; font-size: 13px;
   }
 
-  /* Top-right: pause / start / continue (sends SPACE + ENTER). */
+  /* Top-right: pause / start / continue (sends SPACE + ENTER). Nudged down so
+     it clears the top HUD bar and never brushes the weapon name. */
   #btnMenu {
     right: max(12px, env(safe-area-inset-right));
-    top: max(12px, env(safe-area-inset-top));
-    width: 54px; height: 40px; border-radius: 8px; font-size: 13px;
+    top: calc(max(12px, env(safe-area-inset-top)) + 20px);
+    width: 46px; height: 34px; border-radius: 8px; font-size: 12px;
   }
 
   /* Loading placeholder shown before the engine seizes control. */
@@ -158,8 +164,8 @@
 <body>
   <div id="stage">
     <div id="boot">SUMMONING SNAKE MOUNTAIN…</div>
-    <!-- Virtual retro resolution: 320 x 240. Scaled by JS. -->
-    <canvas id="screen" width="320" height="240"></canvas>
+    <!-- Virtual retro resolution: 426 x 240 (16:9 widescreen). Scaled by JS. -->
+    <canvas id="screen" width="426" height="240"></canvas>
     <div id="hint">
       <b>WASD</b> move / aim &nbsp;•&nbsp; <b>J</b> fire (hold) &nbsp;•&nbsp;
       <b>K</b> jump &nbsp;•&nbsp; <b>SPACE</b> pause &nbsp;•&nbsp; <b>ENTER</b> start

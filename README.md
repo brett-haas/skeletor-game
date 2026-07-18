@@ -2,8 +2,11 @@
 
 An NES-style action run-and-gun built with **vanilla JavaScript** and the
 **HTML5 Canvas** — no engine, no frameworks, no external assets. Every sprite,
-background, and effect is drawn procedurally with canvas primitives at a fixed
-retro resolution (320×240) scaled up with crisp, pixelated rendering.
+background, and effect is drawn procedurally with canvas primitives at a low
+retro resolution scaled up with crisp, pixelated rendering. The virtual height
+is a fixed 240px; the width adapts to the viewport's aspect ratio (16:9 by
+default) so the canvas fills any screen edge-to-edge — no letterbox bars, no
+distortion — on desktop and mobile alike.
 
 Play as Skeletor and fight your way across three levels to storm Castle
 Grayskull.
@@ -39,7 +42,9 @@ On touch-primary devices (phones, tablets) an on-screen control layer appears
 automatically: a left-thumb directional pad for 8-way move/aim, **FIRE** (hold)
 and **JUMP** buttons on the right, and a **❚❚** button for pause / start /
 continue. Touch input feeds the same controls as the keyboard, so nothing about
-gameplay changes.
+gameplay changes. The canvas fills the whole viewport (widescreen when held in
+landscape, a narrower slice in portrait), and the first tap requests true
+fullscreen to banish the browser's chrome bars where the platform allows it.
 
 Detection uses the `pointer: coarse` media query, so keyboard-driven hybrid
 laptops keep the desktop layout. Override with a query string:

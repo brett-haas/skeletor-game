@@ -15,6 +15,12 @@ class GameEngine {
     this.ctx = canvas.getContext('2d');
     this.ctx.imageSmoothingEnabled = false;
 
+    // On touch, the DOM pause button owns the top-right corner — the HUD must
+    // yield that ground and centre its weapon/barrier readouts instead. Set by
+    // the bootstrap's `body.touch` class before this engine is constructed.
+    this.isTouch = !!(typeof document !== 'undefined' && document.body
+      && document.body.classList && document.body.classList.contains('touch'));
+
     this.input = new Input();
     this.state = STATE.MENU;
 
@@ -42,8 +48,8 @@ class GameEngine {
     this.shakeT = 0; this.shakeMag = 0;
     this.flashT = 0;
 
-    this._fitCanvas();
-    window.addEventListener('resize', () => this._fitCanvas());
+    this._applyViewport();
+    window.addEventListener('resize', () => this._applyViewport());
 
     document.getElementById('boot').style.display = 'none';
   }
@@ -56,16 +62,47 @@ class GameEngine {
     this.particles = [];
   }
 
-  // Scale the virtual canvas to the largest integer multiple that fits.
-  _fitCanvas() {
-    // Touch controls float OVER the canvas, so reclaim the space the desktop
-    // hint bar would otherwise reserve. Guarded: the harness has no body.
-    const touch = document.body && document.body.classList && document.body.classList.contains('touch');
-    const margin = touch ? 8 : 80;
-    const maxW = window.innerWidth - (touch ? 4 : 20);
-    const maxH = window.innerHeight - margin;
-    let scale = Math.floor(Math.min(maxW / VW, maxH / VH));
-    scale = Math.max(1, scale);
+  // The area (in CSS px) the canvas may occupy: the full viewport on touch,
+  // or the viewport minus a strip for the desktop hint bar. Guarded — the test
+  // harness has no <body>, and must keep the fixed default VW.
+  _viewportArea() {
+    const body = (typeof document !== 'undefined') ? document.body : null;
+    const touch = !!(body && body.classList && body.classList.contains('touch'));
+    return {
+      body,
+      touch,
+      w: Math.max(1, window.innerWidth - (touch ? 0 : 8)),
+      h: Math.max(1, window.innerHeight - (touch ? 0 : 44)),
+    };
+  }
+
+  // ADAPTIVE VIEWPORT — reshape VW to the screen so the canvas fills it exactly.
+  //   The whole trick: make the virtual canvas's aspect ratio EQUAL the
+  //   available area's aspect (VH fixed, VW = VH * aspect). Then _fitCanvas
+  //   scales it up with zero letterbox and zero distortion. In portrait you see
+  //   a narrow tall slice; in landscape a gloriously wide one. Skipped under the
+  //   harness (no body), which keeps the 16:9 default so tests stay stable.
+  _applyViewport() {
+    const area = this._viewportArea();
+    if (area.body) {
+      // Clamp the aspect so a freakishly thin window can't birth a degenerate
+      // world (min ~2.4:1 tall, max ~3.2:1 wide).
+      const aspect = clamp(area.w / area.h, 0.42, 3.2);
+      VW = Math.max(2, 2 * Math.round((VH * aspect) / 2));  // keep it even
+    }
+    // Resize the backing store, then restore context state (a width/height
+    // write resets the 2D context, re-enabling smoothing we don't want).
+    if (this.canvas.width !== VW) this.canvas.width = VW;
+    if (this.canvas.height !== VH) this.canvas.height = VH;
+    this.ctx.imageSmoothingEnabled = false;
+    this._fitCanvas(area);
+  }
+
+  // Scale the virtual canvas up to FILL the (aspect-matched) available area.
+  //   Fractional scaling — no cowardly floored-integer scale leaving voids.
+  _fitCanvas(area) {
+    const { w, h } = area || this._viewportArea();
+    const scale = Math.max(1, Math.min(w / VW, h / VH));
     this.canvas.style.width = VW * scale + 'px';
     this.canvas.style.height = VH * scale + 'px';
   }
@@ -902,13 +939,22 @@ class GameEngine {
       ctx.fillRect(x + 1, 6, 2, 2); ctx.fillRect(x + 5, 6, 2, 2);
     }
 
-    // Weapon indicator.
-    this._text(ctx, Weapons[this.player.weapon].name, VW - 4, 4, PAL.havoc, 'right', 8);
+    // Weapon indicator. On touch it centres to clear the top-right pause
+    // button; on desktop it hugs the right edge as before.
+    if (this.isTouch) {
+      this._text(ctx, Weapons[this.player.weapon].name, VW / 2, 4, PAL.havoc, 'center', 8);
+    } else {
+      this._text(ctx, Weapons[this.player.weapon].name, VW - 4, 4, PAL.havoc, 'right', 8);
+    }
 
-    // Barrier timer.
+    // Barrier timer — stacked just beneath the weapon name, same alignment.
     if (this.player.barrierTime > 0) {
       const secs = Math.ceil(this.player.barrierTime / 60);
-      this._text(ctx, `BARRIER ${secs}s`, VW - 4, 16, PAL.cyan, 'right', 8);
+      if (this.isTouch) {
+        this._text(ctx, `BARRIER ${secs}s`, VW / 2, 16, PAL.cyan, 'center', 8);
+      } else {
+        this._text(ctx, `BARRIER ${secs}s`, VW - 4, 16, PAL.cyan, 'right', 8);
+      }
     }
 
     // MID-BOSS health bar (amber, top-center). Shown while a level's mid-boss

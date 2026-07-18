@@ -6,8 +6,10 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 **SKELETOR'S CONQUEST: THE ROAD TO GRAYSKULL** — an NES-style run-and-gun in
 vanilla JS + HTML5 Canvas. No engine, no framework, no dependencies, no build
-step. All art is drawn procedurally with canvas primitives at a fixed 320×240
-virtual resolution, CSS-scaled to an integer multiple.
+step. All art is drawn procedurally with canvas primitives in a low-res virtual
+space with a **fixed 240px height** and an **adaptive width** (`VW`, 16:9 / 426
+by default) that the engine reshapes to the viewport's aspect ratio, then
+CSS-scales up (fractionally) to fill the screen with no letterbox.
 
 ## Commands
 
@@ -97,8 +99,13 @@ vertical climb in Level 3. Respawn uses `checkpointFor(x)`.
   shared draw helpers in `utils.js` (`drawPlatforms`, `drawSkeletor`).
 - Collision is AABB via `aabb(a, b)` in `utils.js`. Entities expose a `hitbox()`;
   the player's is deliberately smaller than its sprite (forgiving).
-- All coordinates are in the 320×240 virtual space (`VW`/`VH`) — never touch the
-  scaled CSS pixel size except in `_fitCanvas()`.
+- All coordinates are in the virtual space (`VW`×`VH`) — never touch the scaled
+  CSS pixel size except in `_applyViewport()` / `_fitCanvas()`. Note `VW` is a
+  `let`, not a `const`: `_applyViewport()` rewrites it to match the viewport
+  aspect (on resize/orientation change too), so read it live — never cache it.
+  `VH` is fixed at 240, so vertical layout and physics never shift. Under the
+  test harness (no `<body>`) `VW` keeps its 426 default, which is why the suite
+  stays deterministic.
 
 ## Tests are integration tests, not unit tests
 

@@ -9,8 +9,13 @@
  * [0] CONFIG & CONSTANTS
  * ========================================================================== */
 
-const VW = 320;   // virtual canvas width  (retro hardware resolution)
-const VH = 240;   // virtual canvas height
+// VW is ADAPTIVE: the engine reshapes it at runtime to match the viewport's
+// aspect ratio (see GameEngine._applyViewport), so the canvas fills any screen
+// edge-to-edge with no letterbox and no distortion. VH stays fixed so the
+// vertical scale — jump heights, level layouts — never shifts. 426 is the
+// 16:9 default used before a real viewport is measured (and under the tests).
+let VW = 426;     // virtual canvas width  (adaptive; 16:9 default)
+const VH = 240;   // virtual canvas height (fixed)
 const GRAVITY = 0.45;
 const MAX_FALL = 8;
 const GROUND_FRICTION = 0.75;

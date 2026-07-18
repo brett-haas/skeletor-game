@@ -11,6 +11,9 @@
 
 window.addEventListener('DOMContentLoaded', () => {
   const canvas = document.getElementById('screen');
+  // Mark the body BEFORE the engine measures the viewport — the adaptive
+  // reshape needs to know whether to reserve space for the desktop hint bar.
+  if (isTouchDevice() && document.body) document.body.classList.add('touch');
   const engine = new GameEngine(canvas);
   engine.start();
   // Expose for tinkering from the console, my minion.
@@ -18,6 +21,19 @@ window.addEventListener('DOMContentLoaded', () => {
 
   setupTouchControls(engine);
 });
+
+/* Is this a touch-PRIMARY device? `?touch` / `?touch=1` forces YES (desktop
+ * testing), `?touch=0` forces NO (keyboard on a hybrid machine); otherwise gate
+ * on `pointer: coarse` rather than mere touch-capability. Shared by the
+ * bootstrap and setupTouchControls so both agree. */
+function isTouchDevice() {
+  const q = typeof location !== 'undefined' ? (location.search || '') : '';
+  const forceOff = /[?&]touch=0\b/.test(q);
+  const forceOn = !forceOff && /[?&]touch(=1)?\b/.test(q);
+  const coarse = typeof window !== 'undefined' && typeof window.matchMedia === 'function'
+    && window.matchMedia('(pointer: coarse)').matches;
+  return forceOn || (!forceOff && coarse);
+}
 
 /* ============================================================================
  * TOUCH CONTROLS — the fingertip legion.
@@ -27,21 +43,30 @@ window.addEventListener('DOMContentLoaded', () => {
  *   neither `ontouchstart` nor a `document.body`.
  * ========================================================================== */
 function setupTouchControls(engine) {
-  // `?touch=0` forces the desktop layout even on a touch device (escape hatch
-  // for keyboard users on hybrid machines); `?touch` (or `?touch=1`) forces it
-  // ON for desktop testing. Absent an override, gate on `pointer: coarse` — a
-  // touch-PRIMARY device — rather than mere touch-capability, so a Surface or
-  // touch-laptop driven by keyboard keeps its desktop layout.
-  const q = typeof location !== 'undefined' ? (location.search || '') : '';
-  const forceOff = /[?&]touch=0\b/.test(q);
-  const forceOn = !forceOff && /[?&]touch(=1)?\b/.test(q);
-  const coarse = typeof window !== 'undefined' && typeof window.matchMedia === 'function'
-    && window.matchMedia('(pointer: coarse)').matches;
-  const hasTouch = forceOn || (!forceOff && coarse);
-  if (!hasTouch || typeof document === 'undefined' || !document.body) return;
+  // The bootstrap already added `touch` to <body> for touch-primary devices;
+  // wire the controls only when it did. (Inert under the harness — no body.)
+  if (typeof document === 'undefined' || !document.body
+      || !document.body.classList.contains('touch')) return;
 
-  document.body.classList.add('touch');
-  if (typeof engine._fitCanvas === 'function') engine._fitCanvas();
+  // Banish the browser's chrome-bars: request true fullscreen on the FIRST
+  // user gesture (the API demands one), then never again. Best-effort — some
+  // browsers (iOS Safari) forbid it, in which case the adaptive scaling already
+  // fills the viewport. Re-fit once fullscreen settles, since innerHeight jumps
+  // when the bars vanish (and the aspect — hence VW — shifts with it).
+  const refit = () => { if (typeof engine._applyViewport === 'function') engine._applyViewport(); };
+  const goFullscreen = () => {
+    document.removeEventListener('pointerdown', goFullscreen);
+    const el = document.documentElement;
+    const req = el.requestFullscreen || el.webkitRequestFullscreen;
+    if (req) {
+      try {
+        const p = req.call(el);
+        if (p && p.then) p.then(refit, refit); else setTimeout(refit, 100);
+      } catch (_) { /* No matter — the scaling stands on its own. */ }
+    }
+  };
+  document.addEventListener('pointerdown', goFullscreen);
+  document.addEventListener('fullscreenchange', refit);
 
   const input = engine.input;
   const $ = (id) => document.getElementById(id);
@@ -135,7 +160,6 @@ function setupTouchControls(engine) {
     () => { input.release('Space'); input.release('Enter'); });
 
   // Re-fit on orientation changes (some browsers don't emit `resize`).
-  window.addEventListener('orientationchange', () => {
-    if (typeof engine._fitCanvas === 'function') engine._fitCanvas();
-  });
+  // A rotate flips the aspect, so re-run the full reshape, not just the scale.
+  window.addEventListener('orientationchange', refit);
 }

@@ -93,7 +93,7 @@ function createGame(opts = {}) {
 
   // ---- Fresh browser stubs ----
   const ctx = mockContext();
-  const canvas = { width: 320, height: 240, style: {}, getContext: () => ctx };
+  const canvas = { width: 426, height: 240, style: {}, getContext: () => ctx };
   const listeners = Object.create(null);
   const addListener = (type, fn) => {
     (listeners[type] || (listeners[type] = [])).push(fn);
