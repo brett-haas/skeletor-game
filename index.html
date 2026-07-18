@@ -128,17 +128,20 @@
     pointer-events: none;
   }
 
-  /* Right thumb: FIRE (hold, lowest/rightmost for the resting thumb) + JUMP
-     up-and-left of it. Offsets give a clear gap on BOTH axes so the two never
-     crowd or overlap, however the safe-area insets land. */
+  /* Right thumb: JUMP sits directly beneath the PAUSE button — same horizontal
+     center — with FIRE down-and-left of it. Both are pinned to the pause
+     button's right-edge base (max(12px, inset-right)) so the JUMP/PAUSE column
+     stays aligned however the safe-area insets land. JUMP's 62px width centers
+     on the 46px pause button when its right offset is (pause-base - 8px); FIRE
+     keeps a clear gap on BOTH axes so the two never crowd or overlap. */
   #btnFire {
-    right: calc(max(18px, env(safe-area-inset-right)) + 98px);
+    right: calc(max(12px, env(safe-area-inset-right)) + 48px);
     bottom: max(18px, env(safe-area-inset-bottom));
     width: 62px; height: 62px; border-radius: 50%; font-size: 13px;
   }
   #btnJump {
-    right: calc(max(18px, env(safe-area-inset-right)) + 42px);
-    bottom: calc(max(18px, env(safe-area-inset-bottom)) + 46px);
+    right: calc(max(12px, env(safe-area-inset-right)) - 8px);
+    bottom: calc(max(18px, env(safe-area-inset-bottom)) + 80px);
     width: 62px; height: 62px; border-radius: 50%; font-size: 13px;
   }
 
