@@ -19,6 +19,9 @@ class Player {
     this.facing = 1;
     this.mode = MODE.SIDE;
 
+    this.jumpBufferT = 0;   // frames a buffered jump press survives
+    this.coyoteT = 0;       // frames of grace after leaving the ground
+
     this.weapon = WEAPON.DEFAULT;
     this.cooldown = 0;
 

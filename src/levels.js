@@ -417,16 +417,28 @@ class Level3 extends Level {
   build() {
     // ---- CLIMB PHASE: a tall shaft of ledges rising to y=0 ----
     // World is tall (1400). Player climbs from bottom to top.
-    const cols = [80, 200, 60, 210, 90, 190, 70, 220, 100, 180];
-    let y = 1360;
+    // A single jump (vy=-8.2 under GRAVITY=0.45) rises only ~70px, so ledges
+    // MUST sit within that reach vertically. The old layout spaced them 120px
+    // apart — literally unclimbable. Two rules now govern the shaft:
+    //   1. Each hop is ~56px, comfortably inside a jump.
+    //   2. The shaft must NOT run up UNDER the solid hallway floor — that slab
+    //      is 60px thick (it occupies y[200..260] across x>=60), and you cannot
+    //      rise into a solid platform from below without cracking your skull on
+    //      its underside. So the zig-zag stops safely beneath the slab and the
+    //      climb EXITS up the LEFT wall (x<60, where nothing is overhead),
+    //      mounting the hallway floor from its top-left corner.
     this.platforms.push({ x: 0, y: 1370, w: 300, h: 40 });  // start floor
-    for (let i = 0; i < cols.length; i++) {
-      y -= 120;
-      this.platforms.push({ x: cols[i] - 45, y, w: 100, h: 10 });
+    const gap = 56;
+    const bandX = [40, 130];               // 120-wide ledges, alternating
+    const N = 19;                          // odd -> top ledge is left-band (x40)
+    for (let k = 1; k <= N; k++) {
+      this.platforms.push({ x: bandX[(k - 1) % 2], y: 1370 - gap * k, w: 120, h: 10 });
     }
-    // Top landing that leads into the hallway (a long high floor).
-    this.platforms.push({ x: 0, y: 180, w: 60, h: 20 });
-    // Hallway floor stretches far to the right at the top.
+    // Left-wall exit ledge (x<60, clear of the overhang): the player hops onto
+    // it from the top zig-zag ledge, then leaps up-and-right to mount the
+    // hallway floor's top-left corner as they arc over its edge.
+    this.platforms.push({ x: 0, y: 250, w: 60, h: 10 });
+    // Hallway floor stretches far to the right along the top of the shaft.
     this.platforms.push({ x: 60, y: this.groundY, w: 2540, h: 60 });
 
     this.checkpoints = [60, 400, 800, 1400, 2000];

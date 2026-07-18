@@ -39,7 +39,11 @@ class Input {
   // Touch buttons feed the SAME key Sets the keyboard does, so the engine
   // never learns of their existence. `press` mirrors a keydown edge; `release`
   // mirrors a keyup. Skeletor's will, delivered by fingertip or key alike.
-  press(code)   { if (!this.keys.has(code)) this.pressed.add(code); this.keys.add(code); }
+  // Every touch press is a discrete, intentional tap, so ALWAYS re-arm the
+  // edge — never guard on `keys.has`. A dropped pointerup (fullscreen swap,
+  // lost capture, a finger sliding off) would otherwise leave the code stuck
+  // in `keys` and silently swallow every future press. That was the curse.
+  press(code)   { this.pressed.add(code); this.keys.add(code); }
   release(code) { this.keys.delete(code); }
 
   // ---- Semantic control helpers (WASD + J/K/Space) ----
@@ -47,7 +51,9 @@ class Input {
   get down()  { return this.held('KeyS') || this.held('ArrowDown'); }
   get left()  { return this.held('KeyA') || this.held('ArrowLeft'); }
   get right() { return this.held('KeyD') || this.held('ArrowRight'); }
-  get fire()  { return this.held('KeyJ'); }
+  // `tapped` catches a jab so fast it pressed AND released between two sim
+  // steps (its release clears `keys` but never `pressed`) — one shot still fires.
+  get fire()  { return this.held('KeyJ') || this.tapped('KeyJ'); }
 
   // Jump is edge-triggered on K alone. ArrowUp is bound to AIM-up (see the `up`
   // getter and aimVector), never to jump — so it is deliberately excluded. The

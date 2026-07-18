@@ -184,6 +184,10 @@ class GameEngine {
     p.barrierTime = 0;
     p.invuln = 90;               // brief mercy i-frames
     p.vx = 0; p.vy = 0;
+    // Clear jump forgiveness: the timers only tick during live movement, so a
+    // jump buffered mid-air before death would freeze and fire involuntarily
+    // the instant we snap the player back onto solid ground.
+    p.jumpBufferT = 0; p.coyoteT = 0;
     if (this.level.mode === MODE.SIDE) {
       const cx = this.level.checkpointFor(p.x);
       p.x = cx;
@@ -343,12 +347,21 @@ class GameEngine {
     if (!inp.left && !inp.right) p.vx *= GROUND_FRICTION;
     p.vx = clamp(p.vx, -maxSpd, maxSpd);
 
-    // Jump (K), edge-triggered. Duck/drop with S (drop through thin platforms).
+    // Jump (K). Edge-triggered, but BUFFERED both ways so touch taps aren't
+    // eaten by endFrame(): a press is remembered for JUMP_BUFFER frames (fires
+    // the instant you land) and COYOTE_TIME frames of grace let you jump just
+    // after stepping off a ledge. Duck/drop with S (drop through thin plats).
     const dropping = inp.down;
-    if (inp.jumpTapped() && p.onGround) {
+    if (inp.jumpTapped()) p.jumpBufferT = JUMP_BUFFER;
+    if (p.onGround) p.coyoteT = COYOTE_TIME;
+    if (p.jumpBufferT > 0 && p.coyoteT > 0) {
       p.vy = -8.2;
       p.onGround = false;
+      p.jumpBufferT = 0;
+      p.coyoteT = 0;
     }
+    if (p.jumpBufferT > 0) p.jumpBufferT--;
+    if (p.coyoteT > 0) p.coyoteT--;
 
     // Gravity.
     p.vy = clamp(p.vy + GRAVITY, -20, MAX_FALL);

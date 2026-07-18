@@ -134,6 +134,11 @@ function setupTouchControls(engine) {
     };
     pad.addEventListener('pointerup', end);
     pad.addEventListener('pointercancel', end);
+    // Same safety net as the buttons: a stolen capture must not strand a
+    // direction key in the held Set and send the player walking forever.
+    pad.addEventListener('lostpointercapture', (e) => {
+      if (e.pointerId === padId) { padId = null; padEnd(); }
+    });
   }
 
   /* ---- Right thumb + menu: momentary buttons ---- */
@@ -148,6 +153,9 @@ function setupTouchControls(engine) {
     const up = () => { el.classList.remove('active'); if (onUp) onUp(); };
     el.addEventListener('pointerup', up);
     el.addEventListener('pointercancel', up);
+    // Safety net: if the browser steals capture (fullscreen swap, gesture
+    // takeover) the pointerup may never land — release anyway so no key sticks.
+    el.addEventListener('lostpointercapture', up);
   }
 
   holdButton($('btnFire'), () => input.press('KeyJ'), () => input.release('KeyJ'));

@@ -122,3 +122,84 @@ test('REGRESSION: every pit is crossable — jumpable, or spanned by a bridge', 
     }
   }
 });
+
+test('REGRESSION: Level 3 vertical climb is actually completable — a bot climbs it', () => {
+  // The pit guard above only checks HORIZONTAL gaps; it was blind to Level 3's
+  // vertical shaft. That shaft has shipped broken twice: once with ledges 120px
+  // apart (beyond a jump's ~70px reach) and once with the top ledges tucked
+  // UNDER the solid hallway floor's overhang (you can't rise into a solid slab
+  // from below). A static reachability check missed the second bug entirely, so
+  // this guard instead DRIVES the real engine: a simple climbing bot picks the
+  // next ledge above, walks under it, and jumps — and must reach the hallway.
+  const g = createGame();
+  g.loadLevel(2);
+  const lvl = g.level;
+  const p = g.player;
+  const plats = () => lvl.platforms.filter((pl) => !pl.gone);
+  const feet = (pl) => (pl === p ? p.y + p.h : pl.y);
+  const goal = plats().find((pl) => pl.y === lvl.groundY && pl.w > 1000);
+  assert.ok(goal, 'sanity: Level 3 should have a long hallway floor at groundY');
+
+  const bodyOverlap = (pl) => p.x < pl.x + pl.w && pl.x < p.x + p.w;
+  const currentPlat = () => {
+    let best = null;
+    for (const pl of plats()) {
+      if (Math.abs(pl.y - (p.y + p.h)) <= 4 && bodyOverlap(pl)) {
+        if (!best || pl.y < best.y) best = pl;
+      }
+    }
+    return best;
+  };
+  const nextAbove = (cur) => {
+    let best = null;
+    for (const pl of plats()) {
+      if (pl.y >= cur.y) continue;
+      if (!(pl.x < cur.x + cur.w && cur.x < pl.x + pl.w)) continue; // horizontal overlap
+      if (!best || pl.y > best.y) best = pl;                        // closest above
+    }
+    return best;
+  };
+  const overlapMid = (a, b) =>
+    (Math.max(a.x, b.x) + Math.min(a.x + a.w, b.x + b.w)) / 2;
+
+  let holding = null;
+  const setHold = (dir) => {
+    if (holding === dir) return;
+    if (holding) g.release(holding);
+    if (dir) g.hold(dir);
+    holding = dir;
+  };
+
+  let reached = false;
+  for (let frame = 0; frame < 2000; frame++) {
+    p.invuln = Math.max(p.invuln, 4);   // isolate the climb from combat deaths
+    if (p.dead) break;
+    // On the hallway floor (feet at groundY, right of its left edge)?
+    if (p.onGround && Math.abs((p.y + p.h) - goal.y) <= 4 && p.x + p.w / 2 >= 60) {
+      reached = true; break;
+    }
+    const cur = currentPlat();
+    if (cur) {
+      if (p.y + p.h <= 258) {
+        setHold('KeyD');                                   // near top: run-and-jump to mount hallway
+        if (p.onGround) g.tap('KeyK');
+      } else {
+        const nxt = nextAbove(cur);
+        if (nxt) {
+          const target = overlapMid(cur, nxt), c = p.x + p.w / 2;
+          setHold(c < target - 3 ? 'KeyD' : c > target + 3 ? 'KeyA' : null);
+          if (p.onGround) g.tap('KeyK');                   // hop every landing, carrying momentum
+        } else {
+          setHold(null);
+        }
+      }
+    }
+    g.step(1);
+  }
+
+  assert.ok(
+    reached,
+    `Level 3 is not climbable: a bot could not reach the hallway floor from the ` +
+    `start floor within 2000 frames (stuck at y=${Math.round(p.y)}, x=${Math.round(p.x)})`
+  );
+});

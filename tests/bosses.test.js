@@ -97,6 +97,58 @@ test('He-Man: kill Battle Cat to reach phase 2, then only the charge is a window
   assert.ok(hero.hp < hpBefore, 'vulnerable only during the sword charge');
 });
 
+test('He-Man is BEATABLE: a no-invuln dodge-and-shoot bot wins both phases -> VICTORY', () => {
+  // The unit tests above prove the weak-point gating; this drives the whole
+  // fight in the real engine with NO invulnerability to prove it is winnable by
+  // skill: Battle Cat prowls to point-blank then lunges (leap it, timed off its
+  // approach), and He-Man's sword slash spawns a shockwave on the player the
+  // instant the charge completes (be airborne before it fires). The bot holds
+  // position, fires right the whole time, and only ever jumps to dodge.
+  const g = createGame();
+  g.loadLevel(2);
+  const lvl = g.level;
+  const p = g.player;
+  const eng = g.engine;
+  lvl.phase = 'hallway';
+  p.x = lvl.bossX - 140; p.y = lvl.groundY - p.h;   // the boss gate triggers here
+  p.vx = 0; p.vy = 0; p.onGround = true; p.facing = 1;
+  g.step(2);
+  assert.ok(eng.boss, 'boss spawns at the hallway gate');
+
+  const pcx = () => p.x + p.w / 2;
+  // Predicted frames until Battle Cat's body reaches the player (Infinity = safe).
+  const lungeArrival = (c) => {
+    const cCx = c.x + c.w / 2;
+    const gap = Math.max(0, Math.abs(pcx() - cCx) - (c.w / 2 + p.w / 2));
+    if (c.state === 'windup') return (30 - c.t) + gap / 5.2;
+    if (c.state === 'lunge') return Math.sign(c.dir) === Math.sign(pcx() - cCx) ? gap / 5.2 : Infinity;
+    return Infinity;
+  };
+
+  let reachedPhase2 = false;
+  g.hold('KeyJ');   // fire continuously; no horizontal input, so facing stays right
+  for (let frame = 0; frame < 12000; frame++) {
+    if (p.dead || eng.state === 'VICTORY') break;
+    const b = eng.boss;
+    if (!b) { g.step(1); continue; }  // boss dead: ride out the level-cleared timer to VICTORY
+    if (b.phase === 2) reachedPhase2 = true;
+
+    let jump = false;
+    for (const w of b.shockwaves) if (Math.abs(pcx() - w.x) < 52) jump = true;         // ground shockwaves
+    for (const s of eng.enemyShots) if (Math.abs(s.x - pcx()) < 48 && (s.vx || 0) !== 0) jump = true; // bolts
+    if (b.phase === 1) { const a = lungeArrival(b.cat); if (a >= 2 && a <= 13) jump = true; } // leap the cat
+    if (b.phase === 2 && b.hero.charging && b.hero.chargeT >= 84 && b.hero.chargeT <= 89) jump = true; // pre-slash
+
+    if (jump && p.onGround) g.tap('KeyK');
+    g.step(1);
+  }
+  g.release('KeyJ');
+
+  assert.ok(reachedPhase2, 'the bot downs Battle Cat and reaches He-Man (phase 2)');
+  assert.equal(eng.state, 'VICTORY', 'a fair player can defeat both phases without dying');
+  assert.equal(p.dead, false, 'and survive the fight');
+});
+
 // ---------------------------------------------------------------------------
 // Health-bar contract — one invariant guarding EVERY stage boss's bar.
 //

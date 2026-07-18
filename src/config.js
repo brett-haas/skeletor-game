@@ -20,6 +20,13 @@ const GRAVITY = 0.45;
 const MAX_FALL = 8;
 const GROUND_FRICTION = 0.75;
 
+// Jump forgiveness. JUMP_BUFFER: frames a jump press is remembered so a tap
+// made just BEFORE landing still fires on touchdown. COYOTE_TIME: frames after
+// walking off a ledge you may still jump. Both exist because fingertip timing
+// on a touchscreen is as sloppy as Beast Man — the edge alone drops taps.
+const JUMP_BUFFER = 6;
+const COYOTE_TIME = 6;
+
 // Centralized state-machine states.
 const STATE = {
   MENU: 'MENU',
