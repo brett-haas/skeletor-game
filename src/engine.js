@@ -480,7 +480,10 @@ class GameEngine {
           if (e.x > e.homeX + 30) e.data.dir = -1;
           if (!p.invulnerable && aabb(p.hitbox(), e.hitbox())) this.killPlayer();
           if (e.t % 50 === 0) {
-            this.enemyShots.push(new Projectile(e.x, e.y + 10, -3, 0,
+            // Aim at the player instead of a fixed horizontal line — a standing
+            // target must no longer be spared by a bolt that sails overhead.
+            const a = Math.atan2((p.y + p.h / 2) - (e.y + 10), p.x - e.x);
+            this.enemyShots.push(new Projectile(e.x, e.y + 10, Math.cos(a) * 3, Math.sin(a) * 3,
               { kind: 'ebolt', r: 3, color: PAL.blood, life: 120 }));
           }
           break;

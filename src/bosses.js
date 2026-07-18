@@ -26,7 +26,16 @@ class ManAtArms {
     this.laserT = 120;
     this.grenadeT = 90;
     this.laserActive = 0;
+    // Laser is lethal only for its final `laserLethal` frames; the frames
+    // before that are a harmless charge telegraph. A longer telegraph + shorter
+    // kill window (30/30 of the 60-frame active span) leaves the beam
+    // comfortably jumpable — airtime (~36f) now exceeds the lethal window.
+    this.laserLethal = 30;
     this.hurtT = 0;
+    // Beam height offset from this.y. Tuned so the horizontal laser strikes a
+    // STANDING player's torso (must be jumped, not simply stood under). Shared
+    // by the lethal check and the render so muzzle and beam stay aligned.
+    this.beamOff = 78;
     // Core generator hitbox sits under the platform (the only weak point).
     this.core = { ox: 22, oy: 70, w: 26, h: 20 };
   }
@@ -48,8 +57,8 @@ class ManAtArms {
     if (this.laserActive > 0) {
       this.laserActive--;
       // Beam becomes lethal after a short charge.
-      if (this.laserActive < 40) {
-        const beamY = this.y + 34;
+      if (this.laserActive < this.laserLethal) {
+        const beamY = this.y + this.beamOff;
         const pb = p.hitbox();
         if (!p.invulnerable && p.x < this.x && pb.y < beamY + 4 && pb.y + pb.h > beamY - 4) {
           this.engine.killPlayer();
@@ -120,14 +129,16 @@ class ManAtArms {
     R(34, -1, 2, 1, PAL.skin);                   // moustache part
 
     // ---- Center laser cannon (with barrel + muzzle) ----
-    R(-8, 28, 12, 10, PAL.stoneD);
-    R(-6, 30, 10, 6, PAL.blood);
-    R(-12, 31, 6, 4, PAL.gray);
+    // Mounted low so the beam runs along a standing player's torso.
+    const b = this.beamOff;
+    R(-8, b - 5, 12, 10, PAL.stoneD);
+    R(-6, b - 3, 10, 6, PAL.blood);
+    R(-12, b - 2, 6, 4, PAL.gray);
     if (this.laserActive > 0) {
-      const charging = this.laserActive >= 40;
+      const charging = this.laserActive >= this.laserLethal;
       ctx.strokeStyle = charging ? 'rgba(255,210,63,0.5)' : PAL.blood;
       ctx.lineWidth = charging ? 2 : 5;
-      ctx.beginPath(); ctx.moveTo(x - 12, y + 33); ctx.lineTo(-cam.x, y + 33); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(x - 12, y + b); ctx.lineTo(-cam.x, y + b); ctx.stroke();
     }
 
     // ---- Exposed CORE GENERATOR (the weak point) — pulsing when alive ----
