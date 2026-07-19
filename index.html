@@ -173,21 +173,20 @@
     box-shadow: 0 0 12px rgba(125, 75, 214, 0.6);
   }
 
-  /* Right thumb: JUMP sits directly beneath the PAUSE button — same horizontal
-     center — with FIRE down-and-left of it. Both are pinned to the pause
-     button's right-edge base (max(12px, inset-right)) so the JUMP/PAUSE column
-     stays aligned however the safe-area insets land. JUMP's 62px width centers
-     on the 46px pause button when its right offset is (pause-base - 8px); FIRE
-     keeps a clear gap on BOTH axes so the two never crowd or overlap. */
+  /* Right thumb: JUMP sits above FIRE, both nudged in from the right edge with
+     FIRE down-and-left of JUMP. Both are pinned to the pause button's right-edge
+     base (max(12px, inset-right)) so the column stays put however the safe-area
+     insets land. Each keeps a clear gap on BOTH axes so the two never crowd or
+     overlap. */
   #btnFire {
-    right: calc(max(12px, env(safe-area-inset-right)) + 48px);
+    right: calc(max(12px, env(safe-area-inset-right)) + 72px);
     bottom: max(18px, env(safe-area-inset-bottom));
-    width: 62px; height: 62px; border-radius: 50%; font-size: 13px;
+    width: 70px; height: 70px; border-radius: 50%; font-size: 14px;
   }
   #btnJump {
-    right: calc(max(12px, env(safe-area-inset-right)) - 8px);
+    right: calc(max(12px, env(safe-area-inset-right)) + 12px);
     bottom: calc(max(18px, env(safe-area-inset-bottom)) + 80px);
-    width: 62px; height: 62px; border-radius: 50%; font-size: 13px;
+    width: 70px; height: 70px; border-radius: 50%; font-size: 14px;
   }
 
   /* Top-right: pause / start / continue (sends SPACE + ENTER). Nudged down so
