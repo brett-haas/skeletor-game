@@ -179,6 +179,9 @@ class GameEngine {
 
   respawn() {
     const p = this.player;
+    // Let the level reset any respawn-sensitive hazards (e.g. L3's collapsing
+    // climb ledges) BEFORE we snap the player onto the floor beneath them.
+    this.level.onRespawn();
     p.dead = false;
     p.weapon = WEAPON.DEFAULT;   // one-hit death = weapon loss
     p.barrierTime = 0;

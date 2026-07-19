@@ -395,8 +395,14 @@ test('REGRESSION: Level 3 vertical climb is actually completable — a bot climb
         const nxt = nextAbove(cur);
         if (nxt) {
           const target = overlapMid(cur, nxt), c = p.x + p.w / 2;
-          setHold(c < target - 3 ? 'KeyD' : c > target + 3 ? 'KeyA' : null);
-          if (p.onGround) g.tap('KeyK');                   // hop every landing, carrying momentum
+          const aligned = Math.abs(c - target) <= 14;
+          setHold(aligned ? null : (c < target ? 'KeyD' : 'KeyA'));
+          // Settle over the target before hopping. The every-other collapsing
+          // stepping stones are narrow launch windows; hopping mid-drift (the old
+          // "hop every landing" bot) sails off the next ledge's far edge and — now
+          // that a fall is fatal with no regen — dies. A careful climber lines up,
+          // then hops nearly straight up onto the overlapping ledge above.
+          if (p.onGround && aligned) g.tap('KeyK');
         } else {
           setHold(null);
         }
@@ -410,6 +416,85 @@ test('REGRESSION: Level 3 vertical climb is actually completable — a bot climb
     `Level 3 is not climbable: a bot could not reach the hallway floor from the ` +
     `start floor within 2000 frames (stuck at y=${Math.round(p.y)}, x=${Math.round(p.x)})`
   );
+});
+
+test('Level 3 climb: every-other ledge collapses, launchpad + exit are solid, respawn restores', () => {
+  const g = createGame();
+  g.loadLevel(2);
+  const lvl = g.level;
+  const N = 19;
+
+  // The 19 zig-zag climb ledges are w:120,h:10 at y = 1370 - 56k. Odd k (from the
+  // bottom ledge up) collapses EXCEPT the topmost stepping stone k=N, which stays
+  // solid so the precise up-and-left mount onto the narrow exit ledge has stable
+  // footing. So the collapsing set is odd k in [1, N-1] -> 1,3,5,…,17.
+  const climbLedge = (k) =>
+    lvl.platforms.find((pl) => pl.w === 120 && pl.h === 10 && pl.y === 1370 - 56 * k);
+
+  for (let k = 1; k <= N; k++) {
+    const pl = climbLedge(k);
+    assert.ok(pl, `climb ledge k=${k} exists`);
+    if (k % 2 === 1 && k !== N) {
+      assert.ok(pl.collapsing, `odd ledge k=${k} should collapse`);
+      assert.equal(pl.baseY, pl.y, `collapsing ledge k=${k} remembers its baseY`);
+    } else {
+      assert.ok(!pl.collapsing, `ledge k=${k} should stay solid`);
+    }
+  }
+  assert.ok(climbLedge(N) && !climbLedge(N).collapsing, 'topmost stepping stone is solid');
+
+  // The last platform before the hallway is the left-wall exit ledge; it must be
+  // solid so the player always has firm footing to mount the hall.
+  const exit = lvl.platforms.find((pl) => pl.x === 0 && pl.y === 250 && pl.w === 60);
+  assert.ok(exit, 'exit ledge exists');
+  assert.ok(!exit.collapsing, 'exit ledge before the hallway is NOT collapsing');
+
+  // Drive a triggered ledge all the way to `gone`, one animation step at a time.
+  const dropUntilGone = (pl) => {
+    pl.triggered = true;
+    let steps = 0;
+    while (!pl.gone && steps++ < 400) lvl.update(0);
+    assert.ok(pl.gone, `ledge at y=${pl.baseY} falls a screen and vanishes`);
+    assert.ok(pl.y > pl.baseY, 'vanished ledge has descended below its origin');
+  };
+
+  // A fallen ledge stays gone — collapsing ledges do NOT regenerate on their own.
+  const dead = climbLedge(1);
+  dropUntilGone(dead);
+  for (let i = 0; i < 200; i++) lvl.update(0);
+  assert.ok(dead.gone, 'a fallen climb ledge does NOT regenerate on its own');
+
+  // RESPAWN-RESET (the death path): the ONLY thing that brings a fallen ledge back
+  // is a respawn, which restores the whole shaft so the re-climb from the bottom
+  // is always fair. This is load-bearing: the ledge is genuinely gone above.
+  g.engine.respawn();
+  assert.ok(!dead.triggered, 'respawn clears triggered');
+  assert.ok(!dead.gone, 'respawn clears gone');
+  assert.equal(dead.fallT, 0, 'respawn resets fall timer');
+  assert.equal(dead.y, dead.baseY, 'respawn restores ledge to its base height');
+});
+
+test('Level 3 climb: falling below your highest foothold is fatal (no soft-lock)', () => {
+  const g = createGame();
+  g.loadLevel(2);
+  const lvl = g.level;
+  const p = g.player;
+  p.invuln = 0; p.barrierTime = 0;   // let a real death register
+
+  // Establish a foothold partway up the shaft.
+  p.onGround = true; p.x = 60; p.y = 600;
+  lvl.update(0);                     // records the peak foothold at y=600
+  assert.ok(!p.dead, 'standing on a foothold is safe');
+
+  // A successful upward hop stays at/above the foothold — never fatal.
+  p.onGround = false; p.y = 560;
+  lvl.update(0);
+  assert.ok(!p.dead, 'rising above your foothold is safe');
+
+  // Dropping well below the foothold (a missed jump) is instant death.
+  p.y = 640;
+  lvl.update(0);
+  assert.ok(p.dead, 'dropping more than a stride below your highest foothold is fatal');
 });
 
 // --- Horizontal collision push-out (MOVEMENT_REVIEW.md #4) --------------------

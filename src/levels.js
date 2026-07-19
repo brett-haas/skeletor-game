@@ -33,6 +33,7 @@ class Level {
   build() {}
   update(dt) {}
   renderWorld(ctx, cam) {}
+  onRespawn() {}   // hook: fired when the player respawns (e.g. reset hazards)
 
   // Trigger x-based spawners as the player advances.
   runSpawners(px) {
@@ -412,6 +413,7 @@ class Level3 extends Level {
     this.phase = 'climb';     // 'climb' -> 'hallway'
     this.startX = 60; this.startY = 1330;
     this.groundY = 200;       // used in hallway phase
+    this.climbPeakY = Infinity; // highest (smallest y) foothold reached; fall-death datum
   }
 
   build() {
@@ -431,8 +433,19 @@ class Level3 extends Level {
     const gap = 56;
     const bandX = [40, 130];               // 120-wide ledges, alternating
     const N = 19;                          // odd -> top ledge is left-band (x40)
+    // Every OTHER ledge collapses under the player, starting at the bottom ledge
+    // (odd k -> the left-band x=40 ledges). Two ledges stay solid regardless: the
+    // exit ledge below (not part of this loop) AND the TOPMOST stepping stone
+    // (k===N). The hall mount is a precise up-and-left leap onto the narrow exit
+    // ledge, which needs stable footing to line up — so the launchpad and the
+    // exit ledge are both firm. Thus the last collapsing ledge is k=17.
     for (let k = 1; k <= N; k++) {
-      this.platforms.push({ x: bandX[(k - 1) % 2], y: 1370 - gap * k, w: 120, h: 10 });
+      const y = 1370 - gap * k;
+      const collapsing = (k % 2 === 1 && k !== N);
+      this.platforms.push({
+        x: bandX[(k - 1) % 2], y, w: 120, h: 10,
+        ...(collapsing ? { collapsing: true, baseY: y, fallT: 0 } : {}),
+      });
     }
     // Left-wall exit ledge (x<60, clear of the overhang): the player hops onto
     // it from the top zig-zag ledge, then leaps up-and-right to mount the
@@ -481,8 +494,47 @@ class Level3 extends Level {
     this.bossX = 2450;
   }
 
+  // Restore every collapsing climb ledge on respawn. Collapsing ledges do NOT
+  // regenerate on their own, so once they have fallen away the only way back to a
+  // pristine, climbable shaft is a respawn — which drops the player to the bottom.
+  // Also reset the fall-death datum so the freshly-placed player isn't judged to
+  // have "fallen" relative to a foothold from their previous life.
+  onRespawn() {
+    this.climbPeakY = Infinity;
+    for (const plat of this.platforms) {
+      if (!plat.collapsing) continue;
+      plat.triggered = false;
+      plat.fallT = 0;
+      plat.gone = false;
+      if (plat.baseY !== undefined) plat.y = plat.baseY;
+    }
+  }
+
   update(dt) {
     const p = this.engine.player;
+
+    // Collapsing climb ledges fall exactly like Level 1's: a 22-frame teeter, then
+    // accelerate down, and once a screen below their origin they are gone for good
+    // (no regeneration — see the fall-death rule below for why that's safe).
+    for (const plat of this.platforms) {
+      if (!plat.collapsing || !plat.triggered || plat.gone) continue;
+      plat.fallT += 1;
+      if (plat.fallT > 22) plat.y += (plat.fallT - 22) * 0.6;
+      if (plat.y > plat.baseY + VH) plat.gone = true;
+    }
+
+    // Fall-death rule (climb only). The collapsing ledges are MANDATORY stepping
+    // stones: solid ledges sit 112px apart, past a jump's ~75px reach. A ledge
+    // that has fallen away can't be re-crossed, so any real drop would strand the
+    // player forever. Rather than soft-lock, a fall is fatal: dropping more than a
+    // short stride below your highest foothold kills you, and respawn (onRespawn)
+    // rebuilds a pristine shaft from the bottom. The datum only advances while
+    // grounded, so a normal upward hop (which never dips below its launch ledge)
+    // is always safe.
+    if (this.phase === 'climb') {
+      if (p.onGround) this.climbPeakY = Math.min(this.climbPeakY, p.y);
+      if (p.y > this.climbPeakY + 32) this.engine.killPlayer();
+    }
 
     // Height-based spawners for the climb (trigger when player rises past them).
     for (const s of this.spawners) {
