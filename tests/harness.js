@@ -37,7 +37,7 @@ const EXPORTS = [
   'Player', 'Projectile', 'Enemy', 'PowerUp', 'Particle',
   'Level', 'Level1', 'Level2', 'Level3',
   'ManAtArms', 'SorceressStratos', 'HeManBattleCat',
-  'STATE', 'WEAPON', 'MODE', 'PAL', 'VW', 'VH', 'GRAVITY',
+  'STATE', 'WEAPON', 'MODE', 'PAL', 'VW', 'VH', 'GRAVITY', 'AIR_DRAG',
   'clamp', 'lerp', 'rand', 'randInt', 'sign', 'aabb',
 ];
 

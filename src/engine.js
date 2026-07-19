@@ -344,7 +344,10 @@ class GameEngine {
 
     if (inp.left)  { p.vx -= accel; p.facing = -1; }
     if (inp.right) { p.vx += accel; p.facing = 1; }
-    if (!inp.left && !inp.right) p.vx *= GROUND_FRICTION;
+    if (!inp.left && !inp.right) {
+      if (p.onGround) p.vx *= GROUND_FRICTION;   // 0.75 — quick stop on foot
+      else            p.vx *= AIR_DRAG;          // 0.96 — carry momentum in air
+    }
     p.vx = clamp(p.vx, -maxSpd, maxSpd);
 
     // Drop-through: hold DOWN + tap jump while standing on a thin (one-way)

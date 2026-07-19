@@ -19,6 +19,7 @@ const VH = 240;   // virtual canvas height (fixed)
 const GRAVITY = 0.45;   // general/world gravity (enemies, powerups, hazards, grenades)
 const MAX_FALL = 8;
 const GROUND_FRICTION = 0.75;
+const AIR_DRAG = 0.96;  // airborne horizontal decay — preserves jump momentum
 
 // Variable jump height. A full (held) jump keeps the tuned symmetric arc at
 // RISE_GRAVITY — Level 3's climb spacing and He-Man's dodge windows depend on
