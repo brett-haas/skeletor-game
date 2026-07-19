@@ -66,6 +66,21 @@ status boost, not a weapon, so it leaves whatever you are wielding intact.
 | **F** | Flame Spit | Short-range, high-DPS stream — melts foes up close, useless at range |
 | **B** | Barrier | Temporary invulnerability — keeps your current weapon |
 
+## Scoring & lives
+
+You begin with **3 lives** and a score of zero. The HUD shows your six-digit
+score (top-left, zero-padded) and a row of skull icons for remaining lives.
+
+| Deed | Points |
+|------|--------|
+| Destroy an enemy | **+100** |
+| Grab a power-up | **+250** |
+| Clear a level (defeat its boss) | **+5000** |
+
+Every death costs one life and respawns you at the last checkpoint (each level
+has several). When your last life is spent, it's **GAME OVER** — and your final
+score is tallied on the end screen.
+
 ## Levels
 
 1. **The Vine Jungle** — Horizontal run-and-gun with collapsing platforms and
