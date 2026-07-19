@@ -399,9 +399,19 @@ class GameEngine {
     const g = p.jumpCut ? FALL_GRAVITY : RISE_GRAVITY;
     p.vy = clamp(p.vy + g, -20, MAX_FALL);
 
-    // Integrate X, resolve horizontal collisions against solid platforms.
+    // Integrate X, then resolve horizontal collisions against solid platforms.
     p.x += p.vx;
     p.x = clamp(p.x, 0, this.level.worldW - p.w);
+    for (const plat of this.level.platforms) {
+      if (plat.gone) continue;
+      if (plat.h <= 12) continue;            // thin one-way ledges never block sideways
+      const box = { x: p.x, y: p.y, w: p.w, h: p.h };
+      if (aabb(box, plat)) {
+        if (p.vx > 0)      p.x = plat.x - p.w;       // moving right → snap to left face
+        else if (p.vx < 0) p.x = plat.x + plat.w;    // moving left  → snap to right face
+        p.vx = 0;
+      }
+    }
 
     // Integrate Y, resolve vertical collisions (land on tops).
     p.y += p.vy;

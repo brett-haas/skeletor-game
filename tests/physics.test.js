@@ -264,3 +264,56 @@ test('REGRESSION: Level 3 vertical climb is actually completable — a bot climb
     `start floor within 2000 frames (stuck at y=${Math.round(p.y)}, x=${Math.round(p.x)})`
   );
 });
+
+// --- Horizontal collision push-out (MOVEMENT_REVIEW.md #4) --------------------
+// A solid block whose top is NOT coplanar with the floor is a wall: the player
+// must be stopped at its flank, not walk through it. A two-platform world keeps
+// real level geometry out of the way.
+function standLeftOfWall(g, wall) {
+  g.loadLevel(0);
+  const floor = { x: 0, y: 200, w: 400, h: 40 };  // h>12 => solid
+  g.level.platforms = [floor, wall];
+  const p = g.player;
+  p.invuln = 99999;
+  return { p, floor };
+}
+
+test('solid wall blocks the player moving right (no walk-through of its flank)', () => {
+  const g = createGame();
+  const wall = { x: 200, y: 120, w: 20, h: 80 };   // top 120, body 120-200: a raised wall
+  const { p } = standLeftOfWall(g, wall);
+  p.x = 100; p.y = 200 - p.h; p.vx = 0; p.vy = 0; p.onGround = true;
+  g.hold('KeyD');
+  g.step(40);
+  g.release('KeyD');
+  assert.ok(p.x + p.w <= wall.x + 0.5,
+    `player stopped at the wall's left face (x ${p.x}, wall.x ${wall.x})`);
+});
+
+test('solid wall blocks the player moving left', () => {
+  const g = createGame();
+  const wall = { x: 200, y: 120, w: 20, h: 80 };
+  const { p } = standLeftOfWall(g, wall);
+  p.x = 300; p.y = 200 - p.h; p.vx = 0; p.vy = 0; p.onGround = true;
+  g.hold('KeyA');
+  g.step(40);
+  g.release('KeyA');
+  assert.ok(p.x >= wall.x + wall.w - 0.5,
+    `player stopped at the wall's right face (x ${p.x}, wall right ${wall.x + wall.w})`);
+});
+
+test('thin one-way platform does NOT block horizontal movement (passes through its flank)', () => {
+  const g = createGame();
+  // y=190 makes the thin body span y[190..198], overlapping the walking player's
+  // box y[178..200] — so aabb() WOULD fire and the h<=12 skip is the only reason
+  // the player passes through. (Placed higher, the boxes never overlap and the
+  // test would pass even with the guard deleted — false coverage.)
+  const thin = { x: 200, y: 190, w: 100, h: 8 };   // h<=12 => one-way, must not block sideways
+  const { p } = standLeftOfWall(g, thin);
+  p.x = 100; p.y = 200 - p.h; p.vx = 0; p.vy = 0; p.onGround = true;
+  g.hold('KeyD');
+  g.step(120);             // enough frames at maxSpd 2.4 to clear the whole span
+  g.release('KeyD');
+  assert.ok(p.x > thin.x + thin.w,
+    `player walked clear past the thin platform (x ${p.x}, thin right ${thin.x + thin.w})`);
+});
