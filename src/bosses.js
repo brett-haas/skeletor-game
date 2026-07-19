@@ -28,10 +28,14 @@ class ManAtArms {
     this.grenadeT = 90;
     this.laserActive = 0;
     // Laser is lethal only for its final `laserLethal` frames; the frames
-    // before that are a harmless charge telegraph. A longer telegraph + shorter
-    // kill window (30/30 of the 60-frame active span) leaves the beam
-    // comfortably jumpable — airtime (~36f) now exceeds the lethal window.
-    this.laserLethal = 30;
+    // before that are a harmless charge telegraph. What matters for fairness is
+    // not raw airtime but CLEARANCE time — how long a full jump keeps the
+    // player's feet above the beam (~16px off the ground). That window is only
+    // ~32f (feet clear from ~frame 2 to ~frame 34 of the arc), so a 30f lethal
+    // span left a brutal ~2f timing margin. A 22f kill window (with a longer
+    // 38f telegraph) gives ~10f of slack: still must be jumped, no longer needs
+    // frame-perfect reflexes.
+    this.laserLethal = 22;
     this.hurtT = 0;
     // Beam height offset from this.y. Tuned so the horizontal laser strikes a
     // STANDING player's torso (must be jumped, not simply stood under). Shared
