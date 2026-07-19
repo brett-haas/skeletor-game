@@ -108,24 +108,56 @@
     border-color: #cbb6ef;
   }
 
-  /* Left thumb: an 8-way directional pad. */
+  /* Left thumb: an NES-style cross D-pad. Four arms of matte plastic form the
+     plus; the pressed arm lights up (fed by the direction classes main.js
+     toggles). The pad's hit area is still the full square, so the circular
+     steering math in main.js is untouched — corners read as diagonals. */
   #pad {
     left: max(18px, env(safe-area-inset-left));
     bottom: max(22px, env(safe-area-inset-bottom));
-    width: 108px; height: 108px;
-    border-radius: 50%;
-    background: rgba(26, 15, 46, 0.4);
-    border: 2px solid rgba(125, 75, 214, 0.5);
+    width: 120px; height: 120px;
+    background: none;
+    border: 0;
+    border-radius: 0;
+    box-shadow: none;
+    backdrop-filter: none;
   }
-  #pad .nub {
+  #pad .arm {
     position: absolute;
-    width: 42px; height: 42px;
-    border-radius: 50%;
-    background: rgba(125, 75, 214, 0.8);
-    border: 2px solid #cbb6ef;
-    left: 50%; top: 50%;
-    transform: translate(-50%, -50%);
+    background: #160d24;
+    border: 2px solid rgba(125, 75, 214, 0.55);
+    box-shadow: inset 0 0 6px rgba(0, 0, 0, 0.6);
+    transition: background 40ms linear, box-shadow 40ms linear;
     pointer-events: none;
+  }
+  #pad .arm.up    { left: 38px; top: 0;    width: 44px; height: 62px; border-bottom: 0; border-radius: 8px 8px 0 0; }
+  #pad .arm.down  { left: 38px; bottom: 0; width: 44px; height: 62px; border-top: 0;    border-radius: 0 0 8px 8px; }
+  #pad .arm.left  { top: 38px; left: 0;    height: 44px; width: 62px; border-right: 0;  border-radius: 8px 0 0 8px; }
+  #pad .arm.right { top: 38px; right: 0;   height: 44px; width: 62px; border-left: 0;   border-radius: 0 8px 8px 0; }
+  /* Directional arrow etched into each arm (CSS triangle). */
+  #pad .arm::before {
+    content: ''; position: absolute; width: 0; height: 0;
+    border: 8px solid transparent;
+  }
+  #pad .arm.up::before    { top: 8px;    left: 50%; transform: translateX(-50%); border-bottom-color: rgba(203, 182, 239, 0.7); }
+  #pad .arm.down::before  { bottom: 8px; left: 50%; transform: translateX(-50%); border-top-color: rgba(203, 182, 239, 0.7); }
+  #pad .arm.left::before  { left: 8px;   top: 50%;  transform: translateY(-50%); border-right-color: rgba(203, 182, 239, 0.7); }
+  #pad .arm.right::before { right: 8px;  top: 50%;  transform: translateY(-50%); border-left-color: rgba(203, 182, 239, 0.7); }
+  /* Center hub — the pivot of the cross. */
+  #pad .hub {
+    position: absolute; left: 40px; top: 40px; width: 40px; height: 40px;
+    border-radius: 50%; background: #221636;
+    border: 2px solid rgba(125, 75, 214, 0.55);
+    box-shadow: inset 0 0 6px rgba(0, 0, 0, 0.6);
+    pointer-events: none;
+  }
+  /* Pressed arm blazes with Havoc-purple. */
+  #pad.up    .arm.up,
+  #pad.down  .arm.down,
+  #pad.left  .arm.left,
+  #pad.right .arm.right {
+    background: rgba(125, 75, 214, 0.85);
+    box-shadow: 0 0 12px rgba(125, 75, 214, 0.6);
   }
 
   /* Right thumb: JUMP sits directly beneath the PAUSE button — same horizontal
@@ -178,7 +210,7 @@
   <!-- On-screen touch controls. Hidden until main.js confirms a touch device
        and adds `touch` to <body>. They only manipulate the Input key Sets. -->
   <div id="touch">
-    <div id="pad" class="tc"><div class="nub"></div></div>
+    <div id="pad" class="tc"><span class="arm up"></span><span class="arm down"></span><span class="arm left"></span><span class="arm right"></span><span class="hub"></span></div>
     <div id="btnFire" class="tc">FIRE</div>
     <div id="btnJump" class="tc">JUMP</div>
     <div id="btnMenu" class="tc">❚❚</div>

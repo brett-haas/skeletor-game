@@ -73,7 +73,6 @@ function setupTouchControls(engine) {
 
   /* ---- Left thumb: 8-way directional pad -> Arrow keys ---- */
   const pad = $('pad');
-  const nub = pad && pad.querySelector('.nub');
   const DIRS = { up: 'ArrowUp', down: 'ArrowDown', left: 'ArrowLeft', right: 'ArrowRight' };
   let held = { up: false, down: false, left: false, right: false };
 
@@ -83,6 +82,13 @@ function setupTouchControls(engine) {
       else if (!next[k] && held[k]) input.release(DIRS[k]);
     }
     held = next;
+    // Light the pressed arm(s) of the NES cross D-pad.
+    if (pad) {
+      pad.classList.toggle('up', next.up);
+      pad.classList.toggle('down', next.down);
+      pad.classList.toggle('left', next.left);
+      pad.classList.toggle('right', next.right);
+    }
   }
 
   function padMove(e) {
@@ -99,17 +105,11 @@ function setupTouchControls(engine) {
       up:    live && dy < -t,
       down:  live && dy > t,
     });
-    if (nub) {
-      const mag = Math.hypot(dx, dy) || 1;
-      const c = Math.min(mag, radius) / mag;   // clamp nub inside the ring
-      nub.style.transform = `translate(calc(-50% + ${dx * c}px), calc(-50% + ${dy * c}px))`;
-    }
   }
 
   function padEnd() {
     applyDir({ up: false, down: false, left: false, right: false });
     if (pad) pad.classList.remove('active');
-    if (nub) nub.style.transform = 'translate(-50%, -50%)';
   }
 
   if (pad) {
