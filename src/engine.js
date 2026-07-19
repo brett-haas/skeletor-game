@@ -347,12 +347,21 @@ class GameEngine {
     if (!inp.left && !inp.right) p.vx *= GROUND_FRICTION;
     p.vx = clamp(p.vx, -maxSpd, maxSpd);
 
+    // Drop-through: hold DOWN + tap jump while standing on a thin (one-way)
+    // platform. Down alone is 8-way aim-down, so it must NOT drop you — that
+    // was the old bug (aiming down through your own footing). A latched timer
+    // keeps the platform intangible long enough to clear the land tolerance;
+    // the down+jump tap is consumed here so it can't ALSO trigger a jump.
+    const dropInput = inp.down && inp.jumpTapped() && p.onGround && p.onOneWay;
+    if (dropInput) p.dropT = 8;
+    if (p.dropT > 0) p.dropT--;
+    const dropping = p.dropT > 0;
+
     // Jump (K). Edge-triggered, but BUFFERED both ways so touch taps aren't
     // eaten by endFrame(): a press is remembered for JUMP_BUFFER frames (fires
     // the instant you land) and COYOTE_TIME frames of grace let you jump just
-    // after stepping off a ledge. Duck/drop with S (drop through thin plats).
-    const dropping = inp.down;
-    if (inp.jumpTapped()) p.jumpBufferT = JUMP_BUFFER;
+    // after stepping off a ledge.
+    if (inp.jumpTapped() && !dropInput) p.jumpBufferT = JUMP_BUFFER;
     if (p.onGround) p.coyoteT = COYOTE_TIME;
     if (p.jumpBufferT > 0 && p.coyoteT > 0) {
       p.vy = -8.2;
@@ -385,6 +394,7 @@ class GameEngine {
           p.y = plat.y - p.h;
           p.vy = 0;
           p.onGround = true;
+          p.onOneWay = oneWay;
           // Trigger collapsing platforms.
           if (plat.collapsing && !plat.triggered) plat.triggered = true;
         } else if (!oneWay) {

@@ -21,6 +21,8 @@ class Player {
 
     this.jumpBufferT = 0;   // frames a buffered jump press survives
     this.coyoteT = 0;       // frames of grace after leaving the ground
+    this.dropT = 0;         // frames a thin platform stays intangible (drop-through)
+    this.onOneWay = false;  // is the ground beneath us a one-way (thin) platform?
 
     this.weapon = WEAPON.DEFAULT;
     this.cooldown = 0;

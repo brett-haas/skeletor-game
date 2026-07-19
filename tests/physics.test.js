@@ -81,6 +81,67 @@ test('falling into a bottomless pit is lethal', () => {
   assert.ok(g.engine.lives < before || p.dead, 'a pit fall kills the player');
 });
 
+// Stand the player on a floating THIN (one-way) platform above a solid floor,
+// with a controlled two-platform world so no real level geometry interferes.
+// Returns { p, thin, floor } once the player has settled (onGround & onOneWay).
+function standOnThinPlatform(g) {
+  g.loadLevel(0);
+  const thin  = { x: 150, y: 120, w: 100, h: 8 };  // h<=12 => one-way
+  const floor = { x: 0,   y: 200, w: 400, h: 40 };  // h>12  => solid
+  g.level.platforms = [floor, thin];
+  const p = g.player;
+  p.invuln = 99999;                 // ignore any stray enemy fire
+  p.x = 190; p.y = 90; p.vx = 0; p.vy = 0; p.onGround = false;
+  for (let i = 0; i < 40 && !p.onGround; i++) g.step(1);
+  assert.ok(p.onGround && p.onOneWay,
+    `setup: player should settle on the thin platform (onGround=${p.onGround}, onOneWay=${p.onOneWay})`);
+  return { p, thin, floor };
+}
+
+test('aim-down (DOWN held) does NOT drop the player through a thin platform', () => {
+  const g = createGame();
+  const { p, thin } = standOnThinPlatform(g);
+  const restY = p.y;
+  g.hold('KeyS');          // hold DOWN to aim downward — must not drop us
+  g.step(20);
+  g.release('KeyS');
+  assert.equal(p.onGround, true, 'still standing after aiming down');
+  assert.ok(Math.abs(p.y - restY) < 1, `player stayed on the platform (y ${p.y} vs ${restY})`);
+  assert.ok(p.y < thin.y, 'player never sank below the thin platform top');
+});
+
+test('DOWN + jump drops the player through a thin platform to the floor below', () => {
+  const g = createGame();
+  const { p, thin, floor } = standOnThinPlatform(g);
+  g.hold('KeyS');          // hold DOWN...
+  g.tap('KeyK');           // ...and tap jump: the deliberate drop combo
+  let fellThrough = false;
+  for (let i = 0; i < 60; i++) {
+    g.step(1);
+    if (p.y + p.h > thin.y + thin.h) fellThrough = true;  // cleared the thin plat
+    if (fellThrough && p.onGround) break;                 // landed on the floor
+  }
+  g.release('KeyS');
+  assert.ok(fellThrough, 'player dropped through the thin platform');
+  assert.equal(p.onGround, true, 'player landed on the solid floor below');
+  assert.equal(p.y, floor.y - p.h, 'player came to rest on the floor top');
+});
+
+test('DOWN + jump on SOLID ground still jumps (drop gate must not swallow the leap)', () => {
+  const g = createGame();
+  const { p, floor } = standOnThinPlatform(g);
+  // Drop to the solid floor first so we are grounded on a non-one-way platform.
+  p.x = 50; p.y = floor.y - p.h; p.vx = 0; p.vy = 0; p.onGround = false;
+  g.step(1);
+  assert.ok(p.onGround && !p.onOneWay, 'setup: standing on solid floor');
+  g.hold('KeyS');
+  g.tap('KeyK');
+  g.step(1);
+  g.release('KeyS');
+  assert.ok(p.vy < 0, 'down+jump on solid ground still launches upward');
+  assert.equal(p.onGround, false, 'player left the ground (jumped, not swallowed)');
+});
+
 test('REGRESSION: every pit is crossable — jumpable, or spanned by a bridge', () => {
   const g = createGame();
   const { reach, height } = measureJump(g);
