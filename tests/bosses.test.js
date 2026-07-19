@@ -97,6 +97,48 @@ test('He-Man: kill Battle Cat to reach phase 2, then only the charge is a window
   assert.ok(hero.hp < hpBefore, 'vulnerable only during the sword charge');
 });
 
+test('REGRESSION: a piercing shot damages a boss weak point only ONCE per shot', () => {
+  // Guards the pierce-dedup in every boss hitTest. A LASER ring lingers over a
+  // weak point for many frames; without the proj.hitSet gate it would re-bite
+  // every overlapping frame and melt bosses instantly. A real Projectile is
+  // born with a hitSet (entities.js), so we mirror that here.
+  const pierceShot = (x, y, dmg = 3) => ({
+    x, y, dmg, pierce: true, hitSet: new Set(),
+    hitbox: () => ({ x: x - 3, y: y - 3, w: 6, h: 6 }),
+  });
+
+  // --- Man-At-Arms core ---
+  const g1 = createGame();
+  g1.loadLevel(0);
+  const maa = new g1.classes.ManAtArms(g1.engine, 1000, 200);
+  const cb = maa.coreBox();
+  const ring = pierceShot(cb.x + cb.w / 2, cb.y + cb.h / 2, 3);
+  const maaBefore = maa.hp;
+  maa.hitTest(ring);
+  assert.equal(maa.hp, maaBefore - 3, 'first overlap deals damage');
+  maa.hitTest(ring);
+  maa.hitTest(ring);
+  assert.equal(maa.hp, maaBefore - 3, 'same shot never re-damages the core');
+
+  // --- He-Man mid-charge weak spot ---
+  const g2 = createGame();
+  g2.loadLevel(2);
+  const hm = new g2.classes.HeManBattleCat(g2.engine, 2400, 200);
+  hm.cat.hp = 1;
+  hm.hitTest(shot(hm.cat.x + hm.cat.w / 2, hm.cat.y + hm.cat.h / 2, 4));
+  hm.update();                          // flips to phase 2 (He-Man on foot)
+  assert.equal(hm.phase, 2);
+  const hero = hm.hero;
+  hero.charging = true;                 // open the weak spot
+  const heroRing = pierceShot(hero.x + hero.w / 2, hero.y + hero.h / 2, 3);
+  const heroBefore = hero.hp;
+  hm.hitTest(heroRing);
+  assert.equal(hero.hp, heroBefore - 3, 'charge window: first overlap deals damage');
+  hm.hitTest(heroRing);
+  hm.hitTest(heroRing);
+  assert.equal(hero.hp, heroBefore - 3, 'same shot never re-damages the charge weak spot');
+});
+
 test('He-Man is BEATABLE: a no-invuln dodge-and-shoot bot wins both phases -> VICTORY', () => {
   // The unit tests above prove the weak-point gating; this drives the whole
   // fight in the real engine with NO invulnerability to prove it is winnable by

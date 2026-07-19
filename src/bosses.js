@@ -84,9 +84,14 @@ class ManAtArms {
   hitTest(proj) {
     const cb = this.coreBox();
     if (aabb(proj.hitbox(), cb)) {
-      this.hp -= proj.dmg; this.hurtT = 6;
-      this.engine.spawnBurst(cb.x + cb.w / 2, cb.y + cb.h / 2, PAL.havoc, 8);
-      if (this.hp <= 0) this.dead = true;
+      // Piercing shots bite the core ONCE per shot (like the enemy loop),
+      // not every frame they overlap it.
+      if (!proj.pierce || !proj.hitSet.has(this)) {
+        this.hp -= proj.dmg; this.hurtT = 6;
+        this.engine.spawnBurst(cb.x + cb.w / 2, cb.y + cb.h / 2, PAL.havoc, 8);
+        if (this.hp <= 0) this.dead = true;
+        if (proj.pierce) proj.hitSet.add(this);
+      }
       return true;
     }
     // The armored machine body blocks (and stops) non-piercing shots harmlessly.
@@ -276,11 +281,14 @@ class SorceressStratos {
     if (this.stratos.alive) {
       const s = this.stratos;
       if (aabb(proj.hitbox(), { x: s.x, y: s.y, w: s.w, h: s.h })) {
-        s.hp -= proj.dmg; s.hurtT = 6;
-        this.engine.spawnBurst(proj.x, proj.y, PAL.cyan, 6);
-        if (s.hp <= 0) {
-          s.alive = false;
-          this.engine.banner('STRATOS DOWN! STRIKE THE SORCERESS!', 130);
+        if (!proj.pierce || !proj.hitSet.has(s)) {
+          s.hp -= proj.dmg; s.hurtT = 6;
+          this.engine.spawnBurst(proj.x, proj.y, PAL.cyan, 6);
+          if (s.hp <= 0) {
+            s.alive = false;
+            this.engine.banner('STRATOS DOWN! STRIKE THE SORCERESS!', 130);
+          }
+          if (proj.pierce) proj.hitSet.add(s);
         }
         return true;
       }
@@ -289,9 +297,12 @@ class SorceressStratos {
     const q = this.sorc;
     if (aabb(proj.hitbox(), { x: q.x, y: q.y, w: q.w, h: q.h })) {
       if (!this.stratos.alive) {
-        q.hp -= proj.dmg; q.hurtT = 6;
-        this.engine.spawnBurst(proj.x, proj.y, PAL.purple, 6);
-        if (q.hp <= 0) this.dead = true;
+        if (!proj.pierce || !proj.hitSet.has(q)) {
+          q.hp -= proj.dmg; q.hurtT = 6;
+          this.engine.spawnBurst(proj.x, proj.y, PAL.purple, 6);
+          if (q.hp <= 0) this.dead = true;
+          if (proj.pierce) proj.hitSet.add(q);
+        }
       } else {
         this.engine.spawnBurst(proj.x, proj.y, PAL.cyan, 3);   // ward deflect
       }
@@ -520,9 +531,12 @@ class HeManBattleCat {
     if (this.phase === 1) {
       const c = this.cat;
       if (aabb(proj.hitbox(), { x: c.x, y: c.y, w: c.w, h: c.h })) {
-        c.hp -= proj.dmg; c.hurtT = 6;
-        this.engine.spawnBurst(proj.x, proj.y, PAL.hero, 5);
-        if (c.hp <= 0) c.hp = 0;
+        if (!proj.pierce || !proj.hitSet.has(c)) {
+          c.hp -= proj.dmg; c.hurtT = 6;
+          this.engine.spawnBurst(proj.x, proj.y, PAL.hero, 5);
+          if (c.hp <= 0) c.hp = 0;
+          if (proj.pierce) proj.hitSet.add(c);
+        }
         return true;
       }
       return false;
@@ -531,9 +545,12 @@ class HeManBattleCat {
       const box = { x: h.x, y: h.y, w: h.w, h: h.h };
       if (aabb(proj.hitbox(), box)) {
         if (h.charging) {
-          // Weak spot open — damage lands!
-          h.hp -= proj.dmg; h.hurtT = 6;
-          this.engine.spawnBurst(proj.x, proj.y, PAL.havoc, 6);
+          // Weak spot open — damage lands (once per shot for piercers).
+          if (!proj.pierce || !proj.hitSet.has(h)) {
+            h.hp -= proj.dmg; h.hurtT = 6;
+            this.engine.spawnBurst(proj.x, proj.y, PAL.havoc, 6);
+            if (proj.pierce) proj.hitSet.add(h);
+          }
         } else {
           // He-Man deflects with his sword — sparks, no damage.
           this.engine.spawnBurst(proj.x, proj.y, PAL.white, 3);

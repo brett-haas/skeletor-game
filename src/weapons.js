@@ -48,7 +48,10 @@ const Weapons = {
       // Slow, massive, wall/enemy-piercing ring of dark energy.
       engine.spawnPlayerShot(ox, oy, aim.x * 2.6, aim.y * 2.6, {
         kind: 'ring', r: 11, color: PAL.purple, life: 140,
-        pierce: true, dmg: 3, grow: 0.12,
+        // One bite per target per shot (boss hitTests dedup via proj.hitSet,
+        // same as the enemy loop), so dmg is tuned as a per-hit burst: strong
+        // on bosses (~17 DPS at cd 34), well under FLAME's ~80 DPS up close.
+        pierce: true, dmg: 10, grow: 0.12,
       });
     },
   },
