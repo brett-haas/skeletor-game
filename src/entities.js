@@ -38,11 +38,16 @@ class Player {
   }
 
   setWeapon(w) {
-    this.weapon = w;
     if (w === WEAPON.BARRIER) {
-      this.barrierTime = 60 * 20;   // 20 seconds at 60fps
+      // BARRIER is a pure STATUS overlay, not a weapon: a timed window of
+      // i-frames + the bubble (BARRIER_TIME). Your current armament is untouched
+      // — the shield GUARDS your power, it does not DEVOUR it. Nothing is lost
+      // when it fades, either.
+      this.barrierTime = BARRIER_TIME;
       this.invuln = Math.max(this.invuln, this.barrierTime);
+      return;
     }
+    this.weapon = w;
   }
 
   get invulnerable() { return this.invuln > 0; }

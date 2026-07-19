@@ -294,12 +294,10 @@ class GameEngine {
       return;
     }
 
-    // Tick invuln / barrier.
+    // Tick invuln / barrier. BARRIER never touches p.weapon, so there is
+    // nothing to revert when it lapses — the bubble simply pops.
     if (p.invuln > 0) p.invuln--;
-    if (p.barrierTime > 0) {
-      p.barrierTime--;
-      if (p.barrierTime === 0 && p.weapon === WEAPON.BARRIER) p.weapon = WEAPON.DEFAULT;
-    }
+    if (p.barrierTime > 0) p.barrierTime--;
 
     // ---- Movement per perspective mode ----
     if (lvl.mode === MODE.SIDE) this._sideMovement(p);

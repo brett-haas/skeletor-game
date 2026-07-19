@@ -8,7 +8,8 @@
 /* ============================================================================
  * [5] WEAPON DEFINITIONS
  *   Each weapon: cooldown (frames), and a fire(engine, origin, aim) factory.
- *   BARRIER is a status (invulnerability) but still fires the default skull.
+ *   BARRIER is a pure status overlay (invulnerability) — see Player.setWeapon;
+ *   it keeps your current weapon and has no fire factory of its own.
  * ========================================================================== */
 
 const Weapons = {
@@ -79,13 +80,10 @@ const Weapons = {
   },
 
   [WEAPON.BARRIER]: {
-    // Fires default bolts; the real power is 15s of invulnerability.
+    // Not a weapon — a pure STATUS pickup (a timed window of i-frames + the
+    // bubble, granted in Player.setWeapon; duration is BARRIER_TIME in config).
+    // No `fire`: it never becomes p.weapon, so it never fires. Kept here only
+    // so the pickup banner can read its name.
     name: 'BARRIER',
-    cooldown: 12,
-    fire(engine, ox, oy, aim) {
-      engine.spawnPlayerShot(ox, oy, aim.x * 5.2, aim.y * 5.2, {
-        kind: 'skull', r: 3, color: PAL.cyan, life: 90,
-      });
-    },
   },
 };

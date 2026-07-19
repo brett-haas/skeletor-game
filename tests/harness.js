@@ -37,7 +37,7 @@ const EXPORTS = [
   'Player', 'Projectile', 'Enemy', 'PowerUp', 'Particle',
   'Level', 'Level1', 'Level2', 'Level3',
   'ManAtArms', 'SorceressStratos', 'HeManBattleCat',
-  'STATE', 'WEAPON', 'MODE', 'PAL', 'VW', 'VH', 'GRAVITY', 'AIR_DRAG',
+  'STATE', 'WEAPON', 'MODE', 'PAL', 'VW', 'VH', 'GRAVITY', 'AIR_DRAG', 'BARRIER_TIME',
   'MOVE_ACCEL', 'MOVE_MAX_SPEED', 'JUMP_VELOCITY', 'TURN_BOOST',
   'RISE_GRAVITY', 'FALL_GRAVITY',
   'clamp', 'lerp', 'rand', 'randInt', 'sign', 'aabb',
@@ -130,7 +130,7 @@ function createGame(opts = {}) {
   const api = {
     engine,
     classes: G,
-    C: { STATE: G.STATE, WEAPON: G.WEAPON, MODE: G.MODE, VW: G.VW, VH: G.VH, GRAVITY: G.GRAVITY },
+    C: { STATE: G.STATE, WEAPON: G.WEAPON, MODE: G.MODE, VW: G.VW, VH: G.VH, GRAVITY: G.GRAVITY, BARRIER_TIME: G.BARRIER_TIME },
 
     get player() { return engine.player; },
     get level() { return engine.level; },

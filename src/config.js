@@ -67,6 +67,10 @@ const WEAPON = {
   BARRIER: 'BARRIER',
 };
 
+// Duration (frames) of the BARRIER pickup's pure-status invulnerability window.
+// The single source of truth — code and tests read this, docs stay numberless.
+const BARRIER_TIME = 60 * 13;   // ~13s at 60fps
+
 // Perspective modes drive how movement, camera & collision behave.
 const MODE = { SIDE: 'SIDE', DEPTH: 'DEPTH' };
 

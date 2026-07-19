@@ -55,15 +55,16 @@ laptops keep the desktop layout. Override with a query string:
 
 ## Power-ups
 
-Defeated enemies may drop a weapon. Picking one up replaces your current
-weapon; **dying reverts you to the default**.
+Defeated enemies may drop a pickup. Grabbing a weapon replaces your current
+one; **dying reverts you to the default**. Barrier is the exception — it is a
+status boost, not a weapon, so it leaves whatever you are wielding intact.
 
 | Pickup | Weapon | Behavior |
 |--------|--------|----------|
 | **S** | Spread Curse | Five skull projectiles in a wide fan — great for crowds |
 | **L** | Light-Ring Laser | Slow, massive ring that pierces walls and enemies |
 | **F** | Flame Spit | Short-range, high-DPS stream — melts foes up close, useless at range |
-| **B** | Barrier | 20 seconds of invulnerability |
+| **B** | Barrier | Temporary invulnerability — keeps your current weapon |
 
 ## Levels
 
