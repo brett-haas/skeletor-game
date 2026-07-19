@@ -19,8 +19,46 @@ window.addEventListener('DOMContentLoaded', () => {
   // Expose for tinkering from the console, my minion.
   window.SKELETOR = engine;
 
+  setupFullscreen(engine);
   setupTouchControls(engine);
 });
+
+/* ============================================================================
+ * FULLSCREEN — banish the browser's craven toolbars.
+ *   A browser will NOT surrender its chrome-bars without a user gesture (curse
+ *   their cowardly security!), so we pounce on the FIRST click OR keypress and
+ *   request true fullscreen, then never listen again. Best-effort — some
+ *   browsers (iOS Safari) forbid it, in which case the adaptive scaling already
+ *   fills the viewport. Applies to EVERY device, not just the touch legion.
+ * ========================================================================== */
+function setupFullscreen(engine) {
+  if (typeof document === 'undefined' || !document.documentElement) return;
+
+  // Re-fit once fullscreen settles: innerHeight jumps when the bars vanish (and
+  // the aspect — hence VW — shifts with it), so re-run the full reshape.
+  const refit = () => { if (typeof engine._applyViewport === 'function') engine._applyViewport(); };
+
+  const goFullscreen = () => {
+    document.removeEventListener('pointerdown', goFullscreen);
+    document.removeEventListener('keydown', goFullscreen);
+    // Already commanding the full screen? Then our work here is done.
+    const fsEl = document.fullscreenElement || document.webkitFullscreenElement;
+    if (fsEl) return;
+    const el = document.documentElement;
+    const req = el.requestFullscreen || el.webkitRequestFullscreen;
+    if (req) {
+      try {
+        const p = req.call(el);
+        if (p && p.then) p.then(refit, refit); else setTimeout(refit, 100);
+      } catch (_) { /* No matter — the scaling stands on its own. */ }
+    }
+  };
+
+  document.addEventListener('pointerdown', goFullscreen);
+  document.addEventListener('keydown', goFullscreen);
+  document.addEventListener('fullscreenchange', refit);
+  document.addEventListener('webkitfullscreenchange', refit);
+}
 
 /* Is this a touch-PRIMARY device? `?touch` / `?touch=1` forces YES (desktop
  * testing), `?touch=0` forces NO (keyboard on a hybrid machine); otherwise gate
@@ -48,25 +86,10 @@ function setupTouchControls(engine) {
   if (typeof document === 'undefined' || !document.body
       || !document.body.classList.contains('touch')) return;
 
-  // Banish the browser's chrome-bars: request true fullscreen on the FIRST
-  // user gesture (the API demands one), then never again. Best-effort — some
-  // browsers (iOS Safari) forbid it, in which case the adaptive scaling already
-  // fills the viewport. Re-fit once fullscreen settles, since innerHeight jumps
-  // when the bars vanish (and the aspect — hence VW — shifts with it).
+  // Fullscreen (banishing the browser's chrome-bars) is now handled globally by
+  // setupFullscreen for every device. Here we only keep a refit for the
+  // touch-specific orientationchange wiring below.
   const refit = () => { if (typeof engine._applyViewport === 'function') engine._applyViewport(); };
-  const goFullscreen = () => {
-    document.removeEventListener('pointerdown', goFullscreen);
-    const el = document.documentElement;
-    const req = el.requestFullscreen || el.webkitRequestFullscreen;
-    if (req) {
-      try {
-        const p = req.call(el);
-        if (p && p.then) p.then(refit, refit); else setTimeout(refit, 100);
-      } catch (_) { /* No matter — the scaling stands on its own. */ }
-    }
-  };
-  document.addEventListener('pointerdown', goFullscreen);
-  document.addEventListener('fullscreenchange', refit);
 
   const input = engine.input;
   const $ = (id) => document.getElementById(id);

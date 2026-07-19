@@ -3,6 +3,15 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<!-- Home-screen web-app flags: launched from the iOS/Android home-screen icon,
+     the conquest runs standalone with ZERO browser chrome. (The Fullscreen API
+     is barred on iPhone Safari, so THIS is the true path to a chrome-free
+     screen there.) -->
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+<meta name="apple-mobile-web-app-title" content="Skeletor's Conquest" />
+<meta name="mobile-web-app-capable" content="yes" />
+<meta name="theme-color" content="#05060a" />
 <title>SKELETOR'S CONQUEST: THE ROAD TO GRAYSKULL</title>
 <style>
   /* ============================================================
@@ -204,6 +213,7 @@
     <div id="hint">
       <b>WASD</b> move / aim &nbsp;•&nbsp; <b>J</b> fire (hold) &nbsp;•&nbsp;
       <b>K</b> jump &nbsp;•&nbsp; <b>SPACE</b> pause &nbsp;•&nbsp; <b>ENTER</b> start
+      <br>fills the screen on first click / key &nbsp;•&nbsp; <b>ESC</b> exit fullscreen
     </div>
   </div>
 
