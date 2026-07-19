@@ -88,6 +88,10 @@
     z-index: 10;
     pointer-events: none;   /* only the pads/buttons catch touches */
     touch-action: none;
+    /* The fingertip legion stands guard but must not blot out the window to
+       Eternia. Dim the whole overlay to a ghostly haze; pressed controls still
+       read brighter than idle since .active alphas scale with this. Tune here. */
+    opacity: 0.4;
   }
   body.touch #hint { display: none; }
   /* No craven bezel on a phone — the conquest fills the glass edge-to-edge. */
