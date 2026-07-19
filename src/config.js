@@ -21,6 +21,14 @@ const MAX_FALL = 8;
 const GROUND_FRICTION = 0.75;
 const AIR_DRAG = 0.96;  // airborne horizontal decay — preserves jump momentum
 
+// Horizontal movement tuning (promoted from inline engine literals). TURN_BOOST
+// multiplies accel when the pressed direction opposes current velocity, so a
+// reversal skids the other way with an NES-style snap instead of grinding.
+const MOVE_ACCEL     = 0.7;   // horizontal accel per frame
+const MOVE_MAX_SPEED = 2.4;   // horizontal speed cap
+const JUMP_VELOCITY  = -8.2;  // jump impulse
+const TURN_BOOST     = 2.0;   // accel multiplier while reversing direction
+
 // Variable jump height. A full (held) jump keeps the tuned symmetric arc at
 // RISE_GRAVITY — Level 3's climb spacing and He-Man's dodge windows depend on
 // that airtime. Releasing jump mid-rise cuts upward velocity to JUMP_CUT of its

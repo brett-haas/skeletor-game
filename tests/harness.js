@@ -38,6 +38,7 @@ const EXPORTS = [
   'Level', 'Level1', 'Level2', 'Level3',
   'ManAtArms', 'SorceressStratos', 'HeManBattleCat',
   'STATE', 'WEAPON', 'MODE', 'PAL', 'VW', 'VH', 'GRAVITY', 'AIR_DRAG',
+  'MOVE_ACCEL', 'MOVE_MAX_SPEED', 'JUMP_VELOCITY', 'TURN_BOOST',
   'clamp', 'lerp', 'rand', 'randInt', 'sign', 'aabb',
 ];
 

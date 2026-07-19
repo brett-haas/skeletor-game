@@ -42,6 +42,34 @@ test('jump launches the player upward off the ground', () => {
   assert.equal(p.onGround, false);
 });
 
+test('turnaround boost: reversing at full speed skids faster than plain accel (#6)', () => {
+  const g = createGame();
+  g.loadLevel(0);
+  const p = g.player;
+  p.x = 100; p.y = g.level.groundY - p.h; p.onGround = true; p.vx = 0; p.vy = 0;
+
+  // Build to full rightward speed on the ground.
+  g.hold('KeyD');
+  g.step(20);
+  assert.ok(p.vx > 2, `should reach near max right speed (got ${p.vx})`);
+
+  // Slam left; count frames until velocity actually flips to <= 0.
+  g.release('KeyD');
+  g.hold('KeyA');
+  let frames = 0;
+  for (let i = 1; i <= 10; i++) {
+    g.step(1);
+    if (p.vx <= 0) { frames = i; break; }
+  }
+  g.release('KeyA');
+
+  assert.ok(frames > 0, 'velocity should reverse when the d-pad flips');
+  // Plain accel (MOVE_ACCEL/frame) from ~max speed needs ~4 frames to cross
+  // zero; the TURN_BOOST kick doubles the decel and crosses in ~2. This guard
+  // FAILS if the boost is removed.
+  assert.ok(frames <= 3, `reversal should skid within 3 frames, got ${frames}`);
+});
+
 test('jumpTapped() edge-triggers on K only — ArrowUp (aim-up) never jumps', () => {
   const g = createGame();
   g.start();

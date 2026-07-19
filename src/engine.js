@@ -340,15 +340,21 @@ class GameEngine {
   /* ---- SIDE-scroll movement + AABB platform collision ---- */
   _sideMovement(p) {
     const inp = this.input;
-    const accel = 0.7, maxSpd = 2.4;
 
-    if (inp.left)  { p.vx -= accel; p.facing = -1; }
-    if (inp.right) { p.vx += accel; p.facing = 1; }
-    if (!inp.left && !inp.right) {
+    const dir = inp.right ? 1 : inp.left ? -1 : 0;
+    if (dir) {
+      p.facing = dir;
+      // Reversal (pressed dir opposes current vx) gets a TURN_BOOST kick — a
+      // snappy NES skid. From rest (vx=0, sign 0) it's a normal accel, so
+      // takeoff is unchanged and the hold-one-direction regression bots never
+      // trip the boost.
+      const boost = Math.sign(p.vx) === -dir ? TURN_BOOST : 1;
+      p.vx += dir * MOVE_ACCEL * boost;
+    } else {
       if (p.onGround) p.vx *= GROUND_FRICTION;   // 0.75 — quick stop on foot
       else            p.vx *= AIR_DRAG;          // 0.96 — carry momentum in air
     }
-    p.vx = clamp(p.vx, -maxSpd, maxSpd);
+    p.vx = clamp(p.vx, -MOVE_MAX_SPEED, MOVE_MAX_SPEED);
 
     // Drop-through: hold DOWN + tap jump while standing on a thin (one-way)
     // platform. Down alone is 8-way aim-down, so it must NOT drop you — that
@@ -367,7 +373,7 @@ class GameEngine {
     if (inp.jumpTapped() && !dropInput) p.jumpBufferT = JUMP_BUFFER;
     if (p.onGround) p.coyoteT = COYOTE_TIME;
     if (p.jumpBufferT > 0 && p.coyoteT > 0) {
-      p.vy = -8.2;
+      p.vy = JUMP_VELOCITY;
       p.onGround = false;
       p.jumpBufferT = 0;
       p.coyoteT = 0;
