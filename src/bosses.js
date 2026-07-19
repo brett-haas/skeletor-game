@@ -633,11 +633,13 @@ class HeManBattleCat {
       ctx.fillRect(jawX, y + 13, 6, 3);
       ctx.fillStyle = PAL.blood; ctx.fillRect(jawX + 2, y + 13, 2, 3);
       // ---- He-Man rider ----
+      // The rider flashes on HIS OWN hurt, never the cat's — he's untouchable in phase 1.
+      const riderHurt = this.hero.hurtT > 0;
       const rx = x + c.w / 2 - 6, ry = y - 16;
-      ctx.fillStyle = hurt ? PAL.white : PAL.skin;
+      ctx.fillStyle = riderHurt ? PAL.white : PAL.skin;
       ctx.fillRect(rx + 1, y - 2, 4, 8); ctx.fillRect(rx + 7, y - 2, 4, 8);  // legs astride
       ctx.fillRect(rx, ry + 4, 12, 12);                                       // torso
-      if (!hurt) {                                                            // muscle shading
+      if (!riderHurt) {                                                       // muscle shading
         ctx.fillStyle = PAL.skinSh; ctx.fillRect(rx, ry + 4, 1, 12); ctx.fillRect(rx + 11, ry + 4, 1, 12);
         ctx.fillStyle = PAL.skinHi; ctx.fillRect(rx + 3, ry + 5, 2, 5); ctx.fillRect(rx + 7, ry + 5, 2, 5); // two pecs
       }
