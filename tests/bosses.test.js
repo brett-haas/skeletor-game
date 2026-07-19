@@ -303,3 +303,112 @@ for (const spec of bossSpecs) {
     assert.equal(shown(), 0, `${spec.name}: bar empties on defeat`);
   });
 }
+
+/* ----------------------------------------------------------------------------
+ *  RESPAWN RESETS THE FIGHT — a boss chipped down before Skeletor falls must
+ *  return at FULL health when he respawns; a killed mid-boss stays killed.
+ * ------------------------------------------------------------------------- */
+
+test('stage boss returns at full HP after the player dies and respawns', () => {
+  const g = createGame();
+  g.loadLevel(0);
+
+  // Reach the Man-At-Arms gate so the boss spawns.
+  g.player.x = g.level.bossX;
+  g.step(1);
+  assert.ok(g.boss, 'stage boss spawned at the gate');
+  const maxHp = g.boss.maxHp;
+
+  // Chip it down.
+  g.boss.hp = Math.floor(maxHp / 2);
+  assert.ok(g.boss.hp < maxHp);
+
+  // Skeletor falls (clear i-frames so the kill lands), then respawns.
+  g.player.invuln = 0;
+  g.engine.killPlayer();
+  g.step(50); // respawn timer is 45 frames
+
+  assert.equal(g.boss, null, 'damaged boss instance is dropped on respawn');
+  assert.equal(g.level.bossTriggered, false, 'boss trigger re-armed');
+
+  // Walk back to the gate -> a pristine boss with full health.
+  g.player.x = g.level.bossX;
+  g.step(1);
+  assert.ok(g.boss, 'a fresh boss re-spawns on return');
+  assert.equal(g.boss.hp, g.boss.maxHp, 'the new boss starts at full HP');
+});
+
+test('living mid-boss re-spawns fresh after a respawn', () => {
+  const g = createGame();
+  g.loadLevel(0);
+
+  // Trip the Battle Ram spawner (atX 2000) from just short of the Ram itself
+  // (2320) so the drop-in doesn't collide with it on the spawn frame.
+  g.player.x = 2100;
+  g.step(1);
+  assert.ok(g.level.midBoss, 'mid-boss spawned');
+  const maxHp = g.level.midBoss.maxHp;
+  g.level.midBoss.hp = 1; // nearly dead but still alive
+
+  // Skeletor falls -> respawns at checkpoint 1520, BEHIND the spawner, so the
+  // chipped Ram is torn down and no fresh one exists until he presses forward.
+  g.player.invuln = 0;
+  g.engine.killPlayer();
+  g.step(50);
+  assert.equal(g.level.midBoss, null, 'the chipped mid-boss is dropped on respawn');
+  assert.equal(g.level.midBossSpawner.done, false, 'the spawner is re-armed');
+
+  // Advance back past the trigger -> a pristine, full-HP Ram re-spawns.
+  g.player.x = 2100;
+  g.step(2);
+  assert.ok(g.level.midBoss, 'a fresh mid-boss re-spawns on return');
+  assert.equal(g.level.midBoss.hp, maxHp, 'the new mid-boss starts at full HP');
+});
+
+test('a defeated mid-boss is not resurrected by a later respawn', () => {
+  const g = createGame();
+  g.loadLevel(0);
+
+  // Spawn and kill the mid-boss.
+  g.player.x = 2100;
+  g.step(1);
+  g.level.midBoss.hp = 0;
+  g.level.midBoss.dead = true;
+  g.step(1); // level.update flags midBossDead
+  assert.equal(g.level.midBossDead, true);
+
+  // Later death must not bring the Ram back — even after walking past its gate.
+  g.player.invuln = 0;
+  g.engine.killPlayer();
+  g.step(50);
+  g.player.x = 2100;
+  g.step(2);
+
+  assert.equal(g.level.midBossSpawner.done, true, 'spawner is not re-armed for a beaten mid-boss');
+  assert.ok(!g.level.midBoss || g.level.midBoss.dead, 'the beaten mid-boss stays beaten');
+});
+
+test('a bypassed living mid-boss is NOT re-materialized behind the player on respawn', () => {
+  // The mid-boss gate (atX 2000) sits behind checkpoints 2450 and 3050, so a
+  // player can slip past the still-living Battle Ram and die ahead of it. The
+  // respawn must NOT re-arm the spawner — that would spawn a fresh full-HP Ram
+  // behind the respawn point, outside its patrol range.
+  const g = createGame();
+  g.loadLevel(0);
+
+  // Trip the spawner, chip the Ram, then advance well past it (checkpoint 2450).
+  g.player.x = 2100;
+  g.step(1);
+  assert.ok(g.level.midBoss, 'mid-boss spawned');
+  g.level.midBoss.hp = 5; // damaged but alive
+  g.player.x = 2600;      // past the Ram; nearest checkpoint is 2450 (>= gate 2000)
+
+  g.player.invuln = 0;
+  g.engine.killPlayer();
+  g.step(50);
+
+  assert.equal(g.level.midBossSpawner.done, true, 'gate stays armed — no Ram re-spawns behind the player');
+  // No pristine full-HP Ram was conjured at the gate.
+  assert.ok(!g.level.midBoss || g.level.midBoss.hp !== g.level.midBoss.maxHp,
+    'no fresh full-HP mid-boss appears behind the respawn point');
+});

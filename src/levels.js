@@ -35,6 +35,15 @@ class Level {
   renderWorld(ctx, cam) {}
   onRespawn() {}   // hook: fired when the player respawns (e.g. reset hazards)
 
+  // Restart any in-progress stage-boss fight on respawn so its HP begins fresh.
+  // The respawn checkpoint always sits before the boss trigger, so clearing the
+  // trigger lets the level re-spawn a full-HP boss when the player returns.
+  resetBossFight() {
+    this.boss = null;
+    this.bossTriggered = false;
+    this.engine.boss = null;
+  }
+
   // Trigger x-based spawners as the player advances.
   runSpawners(px) {
     for (const s of this.spawners) {
@@ -110,7 +119,8 @@ class Level1 extends Level {
                        walker(2500), walker(2750, WEAPON.FLAME));
 
     // ---- MID-BOSS: Teela on the Battle Ram ----
-    this.spawners.push({
+    // Held in a field so resetBossFight() can re-arm it after a respawn.
+    this.midBossSpawner = {
       atX: 2000, done: false, make: () => {
         this.midBoss = new Enemy(2320, this.groundY - 34, {
           w: 46, h: 34, hp: 26, behavior: 'battleram', color: PAL.hero,
@@ -119,10 +129,31 @@ class Level1 extends Level {
         this.engine.enemies.push(this.midBoss);
         this.engine.banner('MID-BOSS: TEELA & BATTLE RAM', 150);
       },
-    });
+    };
+    this.spawners.push(this.midBossSpawner);
 
     // ---- STAGE BOSS trigger at world end ----
     this.bossX = 3380;
+  }
+
+  // On respawn, restart the mid-boss only when the respawn checkpoint lands
+  // BEHIND its spawner gate. Unlike the stage-boss arena (whose trigger sits
+  // ahead of every checkpoint), the mid-boss gate is at atX 2000 while two
+  // checkpoints (2450, 3050) sit PAST it — so if the player slipped past the
+  // still-living Battle Ram and died ahead, re-arming would re-materialize a
+  // fresh Ram behind them, outside its patrol range. Gate on the checkpoint,
+  // not the live player.x: resetBossFight runs before respawn() snaps the
+  // player back, so player.x is still the death position here. The !midBossDead
+  // guard keeps a mid-boss the player already beat beaten.
+  resetBossFight() {
+    super.resetBossFight();
+    const cp = this.checkpointFor(this.engine.player.x);
+    if (this.midBoss && !this.midBossDead && cp < this.midBossSpawner.atX) {
+      const i = this.engine.enemies.indexOf(this.midBoss);
+      if (i >= 0) this.engine.enemies.splice(i, 1);
+      this.midBoss = null;
+      this.midBossSpawner.done = false;
+    }
   }
 
   update(dt) {

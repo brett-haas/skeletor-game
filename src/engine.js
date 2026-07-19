@@ -182,6 +182,10 @@ class GameEngine {
     // Let the level reset any respawn-sensitive hazards (e.g. L3's collapsing
     // climb ledges) BEFORE we snap the player onto the floor beneath them.
     this.level.onRespawn();
+    // Restart any in-progress boss fight so its HP starts fresh — the damaged
+    // instance is dropped and re-spawned at full health when the player returns.
+    this.level.resetBossFight();
+    this.boss = null;
     p.dead = false;
     p.weapon = WEAPON.DEFAULT;   // one-hit death = weapon loss
     p.barrierTime = 0;
