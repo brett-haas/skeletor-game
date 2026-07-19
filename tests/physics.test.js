@@ -70,6 +70,125 @@ test('turnaround boost: reversing at full speed skids faster than plain accel (#
   assert.ok(frames <= 3, `reversal should skid within 3 frames, got ${frames}`);
 });
 
+test('idle velocity snaps to exact zero after release — no sub-pixel creep (#8)', () => {
+  const g = createGame();
+  g.loadLevel(0);
+  const p = g.player;
+  p.x = 100; p.y = g.level.groundY - p.h; p.onGround = true; p.vx = 0; p.vy = 0;
+
+  // Build to speed on the ground, then let go of the d-pad entirely.
+  g.hold('KeyD');
+  g.step(20);
+  assert.ok(p.vx > 2, `should reach near max right speed (got ${p.vx})`);
+  g.release('KeyD');
+
+  // GROUND_FRICTION decay is geometric: without the IDLE_CREEP_EPSILON snap, vx
+  // approaches zero asymptotically and stays a tiny non-zero residual FOREVER.
+  // 30 idle frames is far past the ~14 needed to fall below the 0.05 threshold.
+  g.step(30);
+
+  // Strict zero — this FAILS if the snap-to-zero line is removed (residual ~1e-4).
+  assert.strictEqual(p.vx, 0, `idle vx should snap to exact 0, got ${p.vx}`);
+});
+
+// Drive a straight-up jump and return its peak height above the launch point.
+// variant: 'tap'  — an instant edge press (reads as NEVER held → full jump);
+//          'full' — hold jump through the whole arc (no release edge → full jump);
+//          <number N> — hold jump for N frames then release mid-rise (a CUT short hop).
+function jumpApex(g, variant) {
+  g.loadLevel(0);
+  const p = g.player;
+  p.x = 100; p.y = g.level.groundY - p.h; p.onGround = true; p.vx = 0; p.vy = 0;
+  const launchY = p.y;
+  if (variant === 'tap') {
+    g.tap('KeyK');
+  } else {
+    g.hold('KeyK');
+    if (typeof variant === 'number') { g.step(variant); g.release('KeyK'); }
+  }
+  let apex = 0, airborne = false;
+  for (let i = 0; i < 90; i++) {
+    g.step(1);
+    if (!p.onGround) airborne = true;
+    apex = Math.max(apex, launchY - p.y);
+    if (airborne && p.onGround) break;   // landed
+  }
+  g.release('KeyK');   // clean up the held-jump variants
+  return apex;
+}
+
+test('variable jump height: a short-held jump hops well below a full-held jump (#1)', () => {
+  const full = jumpApex(createGame(), 'full');
+  const shortHop = jumpApex(createGame(), 2);   // released after 2 frames → cut
+  assert.ok(shortHop < full * 0.75,
+    `short hop (${shortHop.toFixed(1)}) should be well below full jump (${full.toFixed(1)})`);
+
+  // LOAD-BEARING INVARIANT: an instant synthetic tap is never seen as "held", so
+  // it must yield the FULL jump — not a short hop. Every pit/climb/boss bot in
+  // the suite jumps via tap(); if this ever short-hops, those regression guards
+  // silently go soft. This assert is their canary.
+  const tap = jumpApex(createGame(), 'tap');
+  assert.ok(Math.abs(tap - full) < 1,
+    `instant tap must equal a full held jump (tap ${tap.toFixed(2)}, full ${full.toFixed(2)})`);
+});
+
+test('cut jump falls under heavier FALL_GRAVITY; a full jump keeps RISE_GRAVITY (#2)', () => {
+  const { RISE_GRAVITY, FALL_GRAVITY } = createGame().classes;
+
+  // Launch a jump variant, then return the per-frame downward vy gain during
+  // early descent (vy > 0 but well under MAX_FALL) — that Δvy IS the gravity.
+  const descentGravity = (variant) => {
+    const g = createGame();
+    g.loadLevel(0);
+    const p = g.player;
+    p.x = 100; p.y = g.level.groundY - p.h; p.onGround = true; p.vx = 0; p.vy = 0;
+    g.hold('KeyK');
+    if (typeof variant === 'number') { g.step(variant); g.release('KeyK'); }
+    for (let i = 0; i < 90; i++) {
+      const before = p.vy;
+      g.step(1);
+      if (before > 0.3 && p.vy < 3) { g.release('KeyK'); return p.vy - before; }
+    }
+    g.release('KeyK');
+    throw new Error(`never measured a clean descent frame for variant ${variant}`);
+  };
+
+  const fullFall = descentGravity('full');   // held through apex → no cut
+  const cutFall  = descentGravity(2);         // released early → jumpCut latches
+
+  assert.ok(Math.abs(fullFall - RISE_GRAVITY) < 1e-6,
+    `full-jump descent should be RISE_GRAVITY ${RISE_GRAVITY}, got ${fullFall}`);
+  assert.ok(Math.abs(cutFall - FALL_GRAVITY) < 1e-6,
+    `cut-jump descent should be FALL_GRAVITY ${FALL_GRAVITY}, got ${cutFall}`);
+  // The whole point of #2: a cut jump snaps down harder than a full one. FAILS if
+  // gravity is made symmetric again.
+  assert.ok(cutFall > fullFall,
+    `cut jump (${cutFall}) must fall faster than a full jump (${fullFall})`);
+});
+
+test('releasing the d-pad mid-air preserves momentum via AIR_DRAG, not ground friction (#3)', () => {
+  const g = createGame();
+  const { AIR_DRAG } = g.classes;
+  g.loadLevel(0);
+  const p = g.player;
+  p.x = 100; p.y = g.level.groundY - p.h; p.onGround = true; p.vx = 0; p.vy = 0;
+
+  g.hold('KeyD'); g.step(20);          // build to full run speed on the ground
+  g.tap('KeyK');  g.step(2);           // full jump (tap = not held) → airborne
+  assert.equal(p.onGround, false, 'should be airborne before releasing the d-pad');
+
+  g.release('KeyD');                   // let go mid-air → no directional input
+  const before = p.vx;
+  assert.ok(before > 1, `should carry real speed into the air, got ${before}`);
+  g.step(1);
+  const ratio = p.vx / before;
+
+  // Airborne idle decay must be AIR_DRAG (0.96), NOT GROUND_FRICTION (0.75). If
+  // the onGround gate regresses, this ratio collapses toward 0.75 and fails.
+  assert.ok(Math.abs(ratio - AIR_DRAG) < 1e-6,
+    `mid-air decay should equal AIR_DRAG ${AIR_DRAG}, got ratio ${ratio}`);
+});
+
 test('jumpTapped() edge-triggers on K only — ArrowUp (aim-up) never jumps', () => {
   const g = createGame();
   g.start();

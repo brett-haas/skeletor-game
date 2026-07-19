@@ -28,6 +28,7 @@ const MOVE_ACCEL     = 0.7;   // horizontal accel per frame
 const MOVE_MAX_SPEED = 2.4;   // horizontal speed cap
 const JUMP_VELOCITY  = -8.2;  // jump impulse
 const TURN_BOOST     = 2.0;   // accel multiplier while reversing direction
+const IDLE_CREEP_EPSILON = 0.05; // below this idle speed, snap vx to 0 (kill sub-pixel creep)
 
 // Variable jump height. A full (held) jump keeps the tuned symmetric arc at
 // RISE_GRAVITY — Level 3's climb spacing and He-Man's dodge windows depend on

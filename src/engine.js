@@ -353,6 +353,7 @@ class GameEngine {
     } else {
       if (p.onGround) p.vx *= GROUND_FRICTION;   // 0.75 — quick stop on foot
       else            p.vx *= AIR_DRAG;          // 0.96 — carry momentum in air
+      if (Math.abs(p.vx) < IDLE_CREEP_EPSILON) p.vx = 0;  // #8: kill sub-pixel idle creep
     }
     p.vx = clamp(p.vx, -MOVE_MAX_SPEED, MOVE_MAX_SPEED);
 
