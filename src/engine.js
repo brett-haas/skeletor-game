@@ -368,12 +368,33 @@ class GameEngine {
       p.onGround = false;
       p.jumpBufferT = 0;
       p.coyoteT = 0;
+      p.jumpCut = false;   // fresh jump: full rise until the button is released
     }
     if (p.jumpBufferT > 0) p.jumpBufferT--;
     if (p.coyoteT > 0) p.coyoteT--;
 
-    // Gravity.
-    p.vy = clamp(p.vy + GRAVITY, -20, MAX_FALL);
+    // Variable jump height (#1): cut the rise the instant jump is RELEASED while
+    // ascending — a held->released edge the sim actually observes. A real quick
+    // tap is held for a few frames then released, so it short-hops; an instant
+    // synthetic tap (test bots) is never seen as held, so it yields a full jump
+    // and the pit/climb regression guards stay honest.
+    const jumpHeldNow = inp.jumpHeld();
+    if (p.vy < 0 && p.jumpWasHeld && !jumpHeldNow && !p.jumpCut) {
+      // Cut the rise, but never below MIN_JUMP_VELOCITY — the shortest tap still
+      // hops with authority instead of a limp flea-hop.
+      p.vy = Math.min(p.vy * JUMP_CUT, -MIN_JUMP_VELOCITY);
+      p.jumpCut = true;
+    }
+    p.jumpWasHeld = jumpHeldNow;
+
+    // Gravity (#2): asymmetric, applied to the JUMP the player is shaping. A
+    // full (held) jump keeps the tuned symmetric arc — Level 3's climb spacing
+    // and He-Man's dodge windows are calibrated to that airtime. The moment the
+    // player releases early (jumpCut), gravity jumps to the heavier FALL_GRAVITY
+    // so the truncated arc snaps back down instead of drifting — that snap is the
+    // felt difference between a short hop and a full leap.
+    const g = p.jumpCut ? FALL_GRAVITY : RISE_GRAVITY;
+    p.vy = clamp(p.vy + g, -20, MAX_FALL);
 
     // Integrate X, resolve horizontal collisions against solid platforms.
     p.x += p.vx;
@@ -395,6 +416,7 @@ class GameEngine {
           p.vy = 0;
           p.onGround = true;
           p.onOneWay = oneWay;
+          p.jumpCut = false;   // grounded: next fall/jump starts at the tuned rate
           // Trigger collapsing platforms.
           if (plat.collapsing && !plat.triggered) plat.triggered = true;
         } else if (!oneWay) {

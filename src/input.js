@@ -60,6 +60,9 @@ class Input {
   // old one-liner tangled in a self-cancelling `... === false && ...` clause
   // that (by operator precedence) collapsed back to plain `tapped('KeyK')`.
   jumpTapped()  { return this.tapped('KeyK'); }
+  // Whether jump is currently HELD (mirrors jumpTapped) — drives variable jump
+  // height: cutting the rise the frame K is released.
+  jumpHeld()    { return this.held('KeyK'); }
 
   /**
    * 8-directional AIM vector, fully decoupled from movement.

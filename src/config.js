@@ -16,9 +16,20 @@
 // 16:9 default used before a real viewport is measured (and under the tests).
 let VW = 426;     // virtual canvas width  (adaptive; 16:9 default)
 const VH = 240;   // virtual canvas height (fixed)
-const GRAVITY = 0.45;
+const GRAVITY = 0.45;   // general/world gravity (enemies, powerups, hazards, grenades)
 const MAX_FALL = 8;
 const GROUND_FRICTION = 0.75;
+
+// Variable jump height. A full (held) jump keeps the tuned symmetric arc at
+// RISE_GRAVITY — Level 3's climb spacing and He-Man's dodge windows depend on
+// that airtime. Releasing jump mid-rise cuts upward velocity to JUMP_CUT of its
+// value and switches to the heavier FALL_GRAVITY, so the shortened arc snaps
+// back down: that tap-vs-hold gap IS variable jump height.
+const RISE_GRAVITY = 0.45;   // full jump: symmetric floaty arc (== legacy GRAVITY)
+const FALL_GRAVITY = 0.62;   // a cut (early-released) jump: snappy descent
+const JUMP_CUT     = 0.45;   // fraction of upward vy kept when jump is released
+const MIN_JUMP_VELOCITY = 4.1; // floor on a cut jump's upward vy — the shortest
+                               // tap still hops with authority (never a flea-hop)
 
 // Jump forgiveness. JUMP_BUFFER: frames a jump press is remembered so a tap
 // made just BEFORE landing still fires on touchdown. COYOTE_TIME: frames after
