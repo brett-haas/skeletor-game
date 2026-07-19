@@ -102,4 +102,14 @@ const PAL = {
   teela:  '#e86a2e',   // Teela's copper hair
   brown:  '#7a4a24',   // Man-At-Arms moustache / straps
   gray:   '#c7ccd6',   // light metal highlight
+  // Highlight tones — the lit side, ~15-20% brighter than their base.
+  purpleHi:'#a06fe8',  // Skeletor robe highlight
+  hoodHi: '#5a8fd0',   // blue cowl highlight
+  boneHi: '#fffdf0',   // skull highlight
+  skinHi: '#f5d4b0',   // flesh highlight (He-Man, Man-At-Arms, Teela)
+  emberHi:'#ffa25c',   // Man-At-Arms helmet / saddle highlight
+  furHi:  '#f0a850',   // Battle Cat body highlight
+  armorGn:  '#3fa34d', // Man-At-Arms green armor
+  armorGnDk:'#25703a', // green armor shadow
+  armorGnHi:'#5fc76a', // green armor highlight
 };

@@ -786,6 +786,9 @@ class GameEngine {
       const sx = (lvl.mode === MODE.SIDE ? p.x - cam.x : p.x);
       const sy = (lvl.mode === MODE.SIDE ? p.y - cam.y : p.y);
       const aim = this.input.aimVector(p.facing);
+      // Only when grounded — the feet-anchored shadow then sits on whatever
+      // platform he stands on, and never floats beneath him mid-jump.
+      if (lvl.mode === MODE.SIDE && p.onGround) drawShadow(ctx, sx + p.w / 2, sy + p.h, p.w);
       drawSkeletor(ctx, sx, sy, p.w, p.h, p.facing, p.weapon, aim, p.invulnerable);
       // Barrier spirits orbiting.
       if (p.barrierTime > 0) this._drawBarrier(ctx, sx + p.w / 2, sy + p.h / 2, p.barrierTime);

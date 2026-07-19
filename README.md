@@ -69,7 +69,7 @@ weapon; **dying reverts you to the default**.
 
 1. **The Vine Jungle** — Horizontal run-and-gun with collapsing platforms and
    Palace Guard turrets. Mid-boss: Teela on the Battle Ram. Stage boss:
-   **Man-At-Arms** (weak point: the core generator beneath his wall).
+   **Man-At-Arms** (weak point: the core reactor on his laser war-machine).
 2. **The Caverns of Whispers** — A side-scrolling descent with snapping floor
    spikes, toggling laser gates, and rolling boulders. Boss: **The Sorceress &
    Stratos** (shoot down Stratos to drop the Sorceress's ward).

@@ -35,6 +35,17 @@ function aabb(a, b) {
 
 function pick(arr) { return arr[randInt(0, arr.length - 1)]; }
 
+// Soft contact shadow beneath a character (screen coords) — grounds the sprite.
+function drawShadow(ctx, cx, groundY, w) {
+  ctx.save();
+  ctx.globalAlpha = 0.35;
+  ctx.fillStyle = PAL.black;
+  ctx.beginPath();
+  ctx.ellipse(cx, groundY, w * 0.5, 3, 0, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.restore();
+}
+
 function drawPlatforms(ctx, cam, platforms, top, side) {
   for (const plat of platforms) {
     if (plat.gone) continue;
@@ -65,6 +76,9 @@ function drawSkeletor(ctx, sx, sy, w, h, facing, weapon, aim, invuln) {
   R(1, 11, 3, 11, PAL.purpleDk);      // left-side shadow
   R(6, 12, 2, 10, PAL.purpleDk);      // fold crease
   R(11, 11, 2, 11, PAL.purpleDk);     // right-side shadow
+  // Lit-side highlight streak + top-shoulder sheen (light from the facing side).
+  R(facing < 0 ? 3 : 8, 12, 2, 9, PAL.purpleHi);
+  R(4, 11, 6, 1, PAL.purpleHi);
   // Bony hands peeking from the robe.
   R(0, 13, 2, 3, PAL.bone);
   R(12, 13, 2, 3, PAL.bone);
@@ -73,6 +87,7 @@ function drawSkeletor(ctx, sx, sy, w, h, facing, weapon, aim, invuln) {
   R(5, 0, 4, 2, PAL.hoodDk);          // pointed crown
   R(1, 1, 12, 4, PAL.hoodDk);         // hood top (dark)
   R(0, 3, 14, 8, PAL.hood);           // hood sides
+  R(1, 3, 12, 1, PAL.hoodHi);         // top-lit cowl gleam
   R(0, 10, 14, 3, PAL.hood);          // shoulders / collar drape
   R(0, 12, 14, 1, PAL.hoodDk);        // collar trim
 
@@ -80,11 +95,15 @@ function drawSkeletor(ctx, sx, sy, w, h, facing, weapon, aim, invuln) {
   R(3, 3, 8, 8, PAL.bone);
   R(3, 3, 2, 8, PAL.boneSh);          // left cheek shadow
   R(3, 3, 8, 1, PAL.boneSh);          // brow ridge
-  // Hollow eye sockets with an ember glow.
+  R(9, 4, 1, 6, PAL.boneHi);          // lit cheekbone highlight
+  R(6, 4, 3, 1, PAL.boneHi);          // brow sheen
+  // Hollow eye sockets with a burning ember glow.
   R(4, 5, 2, 2, PAL.black);
   R(8, 5, 2, 2, PAL.black);
-  R(5, 5, 1, 1, PAL.havoc);
-  R(8, 5, 1, 1, PAL.havoc);
+  R(5, 5, 1, 2, PAL.havoc);           // glowing inner slit
+  R(8, 5, 1, 2, PAL.havoc);
+  R(5, 6, 1, 1, PAL.ember);           // hotter ember core
+  R(8, 6, 1, 1, PAL.ember);
   // Nasal cavity.
   R(6, 7, 2, 2, PAL.black);
   // Grinning teeth.
@@ -113,6 +132,12 @@ function drawSkeletor(ctx, sx, sy, w, h, facing, weapon, aim, invuln) {
     [WEAPON.LASER]: PAL.purple, [WEAPON.FLAME]: PAL.ember,
     [WEAPON.BARRIER]: PAL.cyan,
   }[weapon] || PAL.havoc;
+  // Soft radiant halo behind the orb, then the bright core.
+  ctx.save();
+  ctx.globalAlpha = 0.3;
+  ctx.fillStyle = orbColor;
+  ctx.beginPath(); ctx.arc(ex, ey, 3.5, 0, Math.PI * 2); ctx.fill();
+  ctx.restore();
   ctx.fillStyle = orbColor;
   ctx.beginPath(); ctx.arc(ex, ey, 1.5, 0, Math.PI * 2); ctx.fill();
 

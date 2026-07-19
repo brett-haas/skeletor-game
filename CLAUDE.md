@@ -96,7 +96,7 @@ vertical climb in Level 3. Respawn uses `checkpointFor(x)`.
 ### Rendering & collision conventions
 
 - Screen position is always `world - cam` (e.g. `Math.floor(x - cam.x)`); use the
-  shared draw helpers in `utils.js` (`drawPlatforms`, `drawSkeletor`).
+  shared draw helpers in `utils.js` (`drawPlatforms`, `drawSkeletor`, `drawShadow`).
 - Collision is AABB via `aabb(a, b)` in `utils.js`. Entities expose a `hitbox()`;
   the player's is deliberately smaller than its sprite (forgiving).
 - All coordinates are in the virtual space (`VW`×`VH`) — never touch the scaled

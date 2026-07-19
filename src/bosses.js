@@ -12,8 +12,9 @@
  * ========================================================================== */
 
 // ---- 8a. MAN-AT-ARMS (L1) ------------------------------------------------
-// Multi-tiered defensive wall: center laser + fragmentation grenades.
-// WEAKNESS: the core generator beneath his platform.
+// A green-armored figure riding atop an armored laser war-machine: a horizontal
+// beam cannon + fragmentation grenades.
+// WEAKNESS: the exposed core reactor on the front of his machine.
 class ManAtArms {
   constructor(engine, x, groundY) {
     this.engine = engine;
@@ -36,7 +37,7 @@ class ManAtArms {
     // STANDING player's torso (must be jumped, not simply stood under). Shared
     // by the lethal check and the render so muzzle and beam stay aligned.
     this.beamOff = 78;
-    // Core generator hitbox sits under the platform (the only weak point).
+    // Core reactor hitbox sits low on the machine's front (the only weak point).
     this.core = { ox: 22, oy: 70, w: 26, h: 20 };
   }
 
@@ -88,7 +89,7 @@ class ManAtArms {
       if (this.hp <= 0) this.dead = true;
       return true;
     }
-    // The armored wall body blocks (and stops) non-piercing shots harmlessly.
+    // The armored machine body blocks (and stops) non-piercing shots harmlessly.
     if (aabb(proj.hitbox(), { x: this.x, y: this.y, w: this.w, h: this.core.oy })) {
       this.engine.spawnBurst(proj.x, proj.y, PAL.steel, 3);
       return true; // absorbed, no damage
@@ -101,50 +102,92 @@ class ManAtArms {
     const R = (rx, ry, rw, rh, c) => { ctx.fillStyle = c; ctx.fillRect(x + rx, y + ry, rw, rh); };
     const hurt = this.hurtT > 0;
 
-    // ---- Fortified battlement wall ----
-    R(0, 0, this.w, 68, hurt ? PAL.white : PAL.steel);
-    // Crenellations along the top.
-    for (let cxp = 0; cxp < this.w; cxp += 14) R(cxp, -4, 8, 5, hurt ? PAL.white : PAL.steel);
-    // Riveted armor plates in three tiers.
-    for (const ty of [6, 26, 44]) {
-      R(4, ty, this.w - 8, 14, PAL.stoneD);
-      R(6, ty + 2, this.w - 12, 10, hurt ? PAL.gray : '#6b7486');
-      ctx.fillStyle = PAL.gray;
-      ctx.fillRect(x + 8, y + ty + 4, 1, 1); ctx.fillRect(x + this.w - 9, y + ty + 4, 1, 1);
-      ctx.fillRect(x + 8, y + ty + 8, 1, 1); ctx.fillRect(x + this.w - 9, y + ty + 8, 1, 1);
-    }
+    // Contact shadow anchoring the machine to the ground.
+    drawShadow(ctx, x + this.w / 2, this.groundY - cam.y, this.w);
 
-    // ---- Man-At-Arms bust above the wall ----
-    // Orange helmet dome + crest + side flaps.
-    R(26, -15, 18, 9, hurt ? PAL.white : PAL.ember);
-    R(33, -19, 4, 5, PAL.brown);                 // crest
-    R(24, -12, 3, 8, PAL.ember); R(43, -12, 3, 8, PAL.ember); // ear flaps
-    // Visor slit with glowing eyes.
-    R(27, -7, 16, 2, PAL.black);
-    ctx.fillStyle = PAL.havoc;
-    ctx.fillRect(x + 30, y - 7, 2, 1); ctx.fillRect(x + 38, y - 7, 2, 1);
-    // Exposed lower face + big moustache.
-    R(28, -5, 14, 5, hurt ? PAL.white : PAL.skin);
-    R(28, -2, 14, 2, PAL.brown);
-    R(34, -1, 2, 1, PAL.skin);                   // moustache part
-
-    // ---- Center laser cannon (with barrel + muzzle) ----
-    // Mounted low so the beam runs along a standing player's torso.
+    // ---- Armored LASER WAR-MACHINE (Man-At-Arms rides atop, Teela-style) ----
+    const steel = hurt ? PAL.white : PAL.steel;
     const b = this.beamOff;
-    R(-8, b - 5, 12, 10, PAL.stoneD);
-    R(-6, b - 3, 10, 6, PAL.blood);
-    R(-12, b - 2, 6, 4, PAL.gray);
+    // Tank hull + deck the figure stands on.
+    R(2, 32, this.w - 4, 52, steel);
+    R(2, 32, this.w - 4, 2, PAL.gray);                    // top-lit edge
+    R(0, 30, this.w, 3, PAL.stoneD); R(0, 30, this.w, 1, PAL.havoc); // gold-trimmed deck rail
+    R(2, 78, this.w - 4, 6, PAL.stoneD);                  // shadowed underside
+    ctx.fillStyle = PAL.stoneD;                           // panel seams
+    for (let px = 16; px < this.w - 4; px += 16) ctx.fillRect(x + px, y + 34, 2, 44);
+    R(2, 48, this.w - 4, 2, PAL.havoc); R(2, 50, this.w - 4, 1, PAL.brown); // gold trim band
+    // Treads + wheel hubs.
+    R(0, 82, this.w, 8, PAL.stoneD);
+    for (let wx = 8; wx < this.w; wx += 14) {
+      ctx.fillStyle = PAL.gray;
+      ctx.beginPath(); ctx.arc(x + wx, y + 86, 3, 0, Math.PI * 2); ctx.fill();
+    }
+    // Laser cannon protruding from the machine's left, at beam height.
+    R(0, b - 7, 12, 14, PAL.stoneD); R(0, b - 7, 12, 1, PAL.gray); // mount
+    R(-6, b - 4, 10, 8, PAL.blood);                       // energy chamber
+    R(-4, b - 3, 6, 2, '#ff6b5a');                        // hot core line
+    R(-16, b - 2, 12, 4, PAL.gray);                       // barrel
+    R(-18, b - 3, 3, 6, PAL.steel);                       // muzzle
+
+    // ---- Man-At-Arms standing ATOP the machine ----
+    const armC = hurt ? PAL.white : PAL.armorGn;
+    const mx = 35;                                        // figure centre (local x)
+    ctx.lineCap = 'round';
+    // Legs + boots planted on the deck.
+    R(mx - 6, 22, 4, 10, armC); R(mx + 2, 22, 4, 10, armC);
+    R(mx - 6, 29, 4, 3, PAL.brown); R(mx + 2, 29, 4, 3, PAL.brown);
+    // Torso: green armor + gold chest plate + belt.
+    R(mx - 7, 4, 14, 19, armC);
+    R(mx - 7, 4, 14, 1, hurt ? PAL.white : PAL.armorGnHi);
+    R(mx - 5, 7, 10, 6, hurt ? PAL.white : PAL.hero); R(mx - 5, 7, 10, 1, PAL.havoc); // chest
+    R(mx - 7, 18, 14, 2, PAL.havoc);                      // belt
+    // Shoulder pads + arms.
+    R(mx - 10, 4, 4, 6, armC); R(mx + 6, 4, 4, 6, armC);
+    ctx.strokeStyle = armC; ctx.lineWidth = 4;
+    ctx.beginPath(); ctx.moveTo(x + mx - 8, y + 7); ctx.lineTo(x + mx - 11, y + 17); ctx.stroke(); // left arm on hip
+    R(mx - 13, 15, 4, 4, hurt ? PAL.white : PAL.skin);    // left fist
+    ctx.beginPath(); ctx.moveTo(x + mx + 8, y + 7); ctx.lineTo(x + mx + 12, y + 1); ctx.stroke();  // right arm raised
+    R(mx + 10, -2, 4, 4, hurt ? PAL.white : PAL.skin);    // right fist
+    // Signature mace raised high.
+    ctx.strokeStyle = PAL.brown; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.moveTo(x + mx + 12, y + 1); ctx.lineTo(x + mx + 16, y - 11); ctx.stroke();
+    ctx.fillStyle = PAL.gray; ctx.beginPath(); ctx.arc(x + mx + 17, y - 13, 3, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = PAL.stoneD; ctx.fillRect(x + mx + 16, y - 17, 2, 2); ctx.fillRect(x + mx + 19, y - 12, 2, 2); // spikes
+    // Head: blue helmet, gold crest, tan face, mustache, glowing visor eyes.
+    R(mx - 5, -9, 10, 7, hurt ? PAL.white : PAL.hood);
+    R(mx - 5, -9, 10, 1, hurt ? PAL.white : PAL.hoodHi);
+    R(mx - 1, -12, 2, 3, PAL.havoc);                      // crest
+    R(mx - 6, -3, 2, 5, PAL.hood); R(mx + 4, -3, 2, 5, PAL.hood); // ear flaps
+    R(mx - 4, -3, 8, 5, hurt ? PAL.white : PAL.skin);     // face
+    R(mx - 4, -4, 8, 2, PAL.black);                       // visor slit
+    ctx.fillStyle = PAL.havoc; ctx.fillRect(x + mx - 2, y - 4, 1, 1); ctx.fillRect(x + mx + 1, y - 4, 1, 1);
+    R(mx - 4, 0, 8, 2, PAL.brown);                        // mustache
     if (this.laserActive > 0) {
       const charging = this.laserActive >= this.laserLethal;
       ctx.strokeStyle = charging ? 'rgba(255,210,63,0.5)' : PAL.blood;
       ctx.lineWidth = charging ? 2 : 5;
-      ctx.beginPath(); ctx.moveTo(x - 12, y + b); ctx.lineTo(-cam.x, y + b); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(x - 18, y + b); ctx.lineTo(-cam.x, y + b); ctx.stroke();
     }
 
     // ---- Exposed CORE GENERATOR (the weak point) — pulsing when alive ----
     const cb = this.coreBox();
     const cx = cb.x - cam.x, cy = cb.y - cam.y;
     const pulse = 0.5 + 0.5 * Math.sin(this.t * 0.2);
+    // Warm radiant halo (additive, so it brightens rather than muddies), clipped
+    // above the floor line and pulse-synced so the weak point beckons like energy.
+    const gcx = cx + cb.w / 2, gcy = cy + cb.h / 2, gr = cb.w * 0.95;
+    const floorY = this.groundY - cam.y;
+    ctx.save();
+    ctx.beginPath(); ctx.rect(gcx - gr, gcy - gr, gr * 2, floorY - (gcy - gr)); ctx.clip();
+    ctx.globalCompositeOperation = 'lighter';
+    const a = 0.35 + pulse * 0.4;
+    const grad = ctx.createRadialGradient(gcx, gcy, 1, gcx, gcy, gr);
+    grad.addColorStop(0, `rgba(255,150,40,${a})`);
+    grad.addColorStop(0.5, `rgba(210,60,30,${a * 0.45})`);
+    grad.addColorStop(1, 'rgba(120,20,20,0)');
+    ctx.fillStyle = grad;
+    ctx.beginPath(); ctx.arc(gcx, gcy, gr, 0, Math.PI * 2); ctx.fill();
+    ctx.restore();
     ctx.fillStyle = PAL.stoneD; ctx.fillRect(cx - 2, cy - 2, cb.w + 4, cb.h + 4); // housing
     ctx.fillStyle = `rgba(255,210,63,${0.5 + pulse * 0.5})`;
     ctx.fillRect(cx, cy, cb.w, cb.h);
@@ -274,9 +317,18 @@ class SorceressStratos {
       ctx.lineTo(x + s.w + 14, y + 11 - flap); ctx.lineTo(x + s.w - 3, y + 15); ctx.closePath(); ctx.fill();
       ctx.fillStyle = PAL.blood;
       ctx.fillRect(x - 18, y + 2 - flap, 4, 3); ctx.fillRect(x + s.w + 14, y + 2 - flap, 4, 3);
+      // Shaded wing underside — the wings are already bright, so define them
+      // with a dark lower edge (a light edge had no contrast to work with).
+      ctx.strokeStyle = PAL.stoneD; ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(x + 3, y + 14); ctx.lineTo(x - 14, y + 11 - flap);
+      ctx.moveTo(x + s.w - 3, y + 14); ctx.lineTo(x + s.w + 14, y + 11 - flap);
+      ctx.stroke();
       // Blue torso + red harness X.
       ctx.fillStyle = hurt ? PAL.white : PAL.hood;
       ctx.fillRect(x + 6, y + 4, s.w - 12, s.h - 4);
+      ctx.fillStyle = hurt ? PAL.white : PAL.hoodHi;
+      ctx.fillRect(x + 6, y + 4, s.w - 12, 1);          // top-lit chest stripe
       ctx.strokeStyle = PAL.blood; ctx.lineWidth = 2;
       ctx.beginPath();
       ctx.moveTo(x + 8, y + 5); ctx.lineTo(x + s.w - 8, y + s.h - 2);
@@ -286,7 +338,8 @@ class SorceressStratos {
       ctx.fillStyle = PAL.skin; ctx.fillRect(hx - 4, y - 4, 8, 7);
       ctx.fillStyle = hurt ? PAL.white : PAL.hoodDk; ctx.fillRect(hx - 5, y - 6, 10, 4);
       ctx.fillStyle = PAL.black; ctx.fillRect(hx - 4, y - 2, 8, 2);
-      ctx.fillStyle = PAL.cyan; ctx.fillRect(hx - 3, y - 2, 2, 1); ctx.fillRect(hx + 1, y - 2, 2, 1);
+      ctx.fillStyle = PAL.cyan; ctx.fillRect(hx - 3, y - 2, 2, 2); ctx.fillRect(hx + 1, y - 2, 2, 2);
+      ctx.fillStyle = PAL.white; ctx.fillRect(hx - 3, y - 2, 1, 1); ctx.fillRect(hx + 1, y - 2, 1, 1); // goggle glint
       ctx.fillStyle = PAL.gray; ctx.fillRect(hx - 3, y + 3, 6, 2);
     }
 
@@ -295,6 +348,10 @@ class SorceressStratos {
     const x = q.x - cam.x, y = q.y - cam.y;
     const hurt = q.hurtT > 0;
     const warded = this.stratos.alive;
+    // Contact shadow only when she hovers low to the ground.
+    if (q.y + q.h > this.groundY - 30) {
+      drawShadow(ctx, x + q.w / 2, this.groundY - cam.y, q.w);
+    }
     // Feathered cape.
     ctx.fillStyle = PAL.steel;
     ctx.beginPath();
@@ -305,6 +362,10 @@ class SorceressStratos {
     ctx.beginPath();
     ctx.moveTo(x + 2, y + 8); ctx.lineTo(x + q.w - 2, y + 8);
     ctx.lineTo(x + q.w + 2, y + q.h); ctx.lineTo(x - 2, y + q.h); ctx.closePath(); ctx.fill();
+    if (!hurt) {                                             // hem deepens into shadow
+      ctx.fillStyle = PAL.hoodDk;
+      ctx.fillRect(x - 1, y + q.h - 4, q.w + 2, 4);
+    }
     ctx.fillStyle = PAL.havoc; ctx.fillRect(x + q.w / 2 - 1, y + 12, 2, 5); // emblem
     // Falcon headdress with wing flares + downturned beak.
     ctx.fillStyle = PAL.white;
@@ -319,8 +380,17 @@ class SorceressStratos {
     ctx.closePath(); ctx.fill();
     if (warded) {
       const a = 0.4 + 0.2 * Math.sin(this.engine.frame * 0.2);
+      const wcx = x + q.w / 2, wcy = y + q.h / 2;
+      // Faint translucent shield fill + double ring so the ward is unmistakable.
+      ctx.save();
+      ctx.globalAlpha = 0.12 + 0.06 * Math.sin(this.engine.frame * 0.2);
+      ctx.fillStyle = PAL.cyan;
+      ctx.beginPath(); ctx.arc(wcx, wcy, 22, 0, Math.PI * 2); ctx.fill();
+      ctx.restore();
       ctx.strokeStyle = `rgba(75,214,214,${a + 0.2})`; ctx.lineWidth = 2;
-      ctx.beginPath(); ctx.arc(x + q.w / 2, y + q.h / 2, 22, 0, Math.PI * 2); ctx.stroke();
+      ctx.beginPath(); ctx.arc(wcx, wcy, 22, 0, Math.PI * 2); ctx.stroke();
+      ctx.strokeStyle = `rgba(255,255,255,${a})`; ctx.lineWidth = 1;
+      ctx.beginPath(); ctx.arc(wcx, wcy, 18, 0, Math.PI * 2); ctx.stroke();
     }
   }
 }
@@ -493,6 +563,8 @@ class HeManBattleCat {
       const hurt = c.hurtT > 0;
       const dir = c.dir < 0 ? -1 : 1;
       const green = hurt ? PAL.white : PAL.toxic;
+      // Contact shadow beneath the beast.
+      drawShadow(ctx, x + c.w / 2, this.groundY - cam.y, c.w);
       // Tail.
       const tailX = dir < 0 ? x + c.w - 2 : x + 2;
       ctx.strokeStyle = green; ctx.lineWidth = 3; ctx.lineCap = 'round';
@@ -503,8 +575,12 @@ class HeManBattleCat {
       // Legs.
       ctx.fillStyle = PAL.furDk;
       for (const lx of [x + 6, x + 18, x + c.w - 22, x + c.w - 10]) ctx.fillRect(lx, y + c.h - 6, 5, 6);
-      // Body + orange stripes.
+      // Body + orange stripes, with a lit back band and a shadowed belly.
       ctx.fillStyle = green; ctx.fillRect(x + 2, y + 8, c.w - 4, c.h - 12);
+      if (!hurt) {
+        ctx.fillStyle = PAL.furHi; ctx.fillRect(x + 2, y + 8, c.w - 4, 1);       // lit back
+        ctx.fillStyle = PAL.furDk; ctx.fillRect(x + 2, y + c.h - 5, c.w - 4, 1); // belly shadow
+      }
       ctx.fillStyle = PAL.furDk;
       for (let i = 0; i < 4; i++) ctx.fillRect(x + 12 + i * 9, y + 9, 2, c.h - 14);
       // Orange saddle.
@@ -514,8 +590,15 @@ class HeManBattleCat {
       ctx.fillStyle = hurt ? PAL.white : PAL.blood;
       ctx.fillRect(hx, y + 2, 18, 15);
       ctx.fillRect(hx + 6, y - 2, 6, 4);                 // crest
+      const eyeX = hx + (dir < 0 ? 3 : 11);
+      ctx.fillStyle = PAL.black; ctx.fillRect(eyeX - 1, y + 5, 5, 4); // fierce socket
+      ctx.save();                                         // eye glow halo
+      ctx.globalAlpha = 0.4 + 0.2 * Math.sin(c.t * 0.3);
+      ctx.fillStyle = PAL.havoc;
+      ctx.fillRect(eyeX - 2, y + 4, 7, 6);
+      ctx.restore();
       ctx.fillStyle = PAL.havoc;                          // glowing eye
-      ctx.fillRect(hx + (dir < 0 ? 3 : 11), y + 6, 3, 2);
+      ctx.fillRect(eyeX, y + 6, 3, 2);
       ctx.fillStyle = PAL.white;                          // fangs
       const jawX = dir < 0 ? hx + 1 : hx + 11;
       ctx.fillRect(jawX, y + 13, 6, 3);
@@ -525,6 +608,10 @@ class HeManBattleCat {
       ctx.fillStyle = hurt ? PAL.white : PAL.skin;
       ctx.fillRect(rx + 1, y - 2, 4, 8); ctx.fillRect(rx + 7, y - 2, 4, 8);  // legs astride
       ctx.fillRect(rx, ry + 4, 12, 12);                                       // torso
+      if (!hurt) {                                                            // muscle shading
+        ctx.fillStyle = PAL.skinSh; ctx.fillRect(rx, ry + 4, 1, 12); ctx.fillRect(rx + 11, ry + 4, 1, 12);
+        ctx.fillStyle = PAL.skinHi; ctx.fillRect(rx + 3, ry + 5, 2, 5); ctx.fillRect(rx + 7, ry + 5, 2, 5); // two pecs
+      }
       ctx.strokeStyle = PAL.brown; ctx.lineWidth = 2;                         // harness X
       ctx.beginPath();
       ctx.moveTo(rx + 1, ry + 5); ctx.lineTo(rx + 11, ry + 13);
@@ -532,8 +619,11 @@ class HeManBattleCat {
       ctx.fillStyle = PAL.skin; ctx.fillRect(rx + 3, ry, 6, 6);               // head
       ctx.fillStyle = PAL.hair;                                               // blond bowl cut
       ctx.fillRect(rx + 2, ry - 2, 8, 4); ctx.fillRect(rx + 2, ry, 2, 4); ctx.fillRect(rx + 8, ry, 2, 4);
+      ctx.fillStyle = PAL.boneHi; ctx.fillRect(rx + 2, ry - 2, 8, 1);         // hair top sheen
       ctx.strokeStyle = PAL.gray; ctx.lineWidth = 2;                          // raised sword
       ctx.beginPath(); ctx.moveTo(rx + 12, ry + 2); ctx.lineTo(rx + 17, ry - 9); ctx.stroke();
+      ctx.strokeStyle = PAL.white; ctx.lineWidth = 1;                         // blade gleam
+      ctx.beginPath(); ctx.moveTo(rx + 13, ry); ctx.lineTo(rx + 16, ry - 6); ctx.stroke();
 
     } else {
       // ---- He-Man on foot ----
@@ -541,15 +631,21 @@ class HeManBattleCat {
       const x = h.x - cam.x, y = h.y - cam.y;
       const hurt = h.hurtT > 0;
       const dir = h.dir < 0 ? -1 : 1;
+      // Contact shadow beneath his boots.
+      drawShadow(ctx, x + h.w / 2, this.groundY - cam.y, h.w);
       // Legs: tan thighs, fur loincloth, boots.
       ctx.fillStyle = hurt ? PAL.white : PAL.skin;
       ctx.fillRect(x + 3, y + 17, 4, 6); ctx.fillRect(x + h.w - 7, y + 17, 4, 6);
       ctx.fillStyle = PAL.brown; ctx.fillRect(x + 2, y + 15, h.w - 4, 4);
       ctx.fillStyle = PAL.furDk;
       ctx.fillRect(x + 3, y + 23, 4, h.h - 23); ctx.fillRect(x + h.w - 7, y + 23, 4, h.h - 23);
-      // Bare muscular torso + harness X.
+      // Bare muscular torso + harness X, with muscle shading.
       ctx.fillStyle = hurt ? PAL.white : PAL.skin;
       ctx.fillRect(x + 1, y + 6, h.w - 2, 11);
+      if (!hurt) {
+        ctx.fillStyle = PAL.skinSh; ctx.fillRect(x + 1, y + 6, 1, 11); ctx.fillRect(x + h.w - 2, y + 6, 1, 11);
+        ctx.fillStyle = PAL.skinHi; ctx.fillRect(x + 4, y + 7, 2, 5); ctx.fillRect(x + h.w - 6, y + 7, 2, 5); // two pecs
+      }
       ctx.strokeStyle = PAL.brown; ctx.lineWidth = 2;
       ctx.beginPath();
       ctx.moveTo(x + 2, y + 7); ctx.lineTo(x + h.w - 2, y + 15);
@@ -558,6 +654,7 @@ class HeManBattleCat {
       ctx.fillStyle = PAL.skin; ctx.fillRect(x + 4, y, h.w - 8, 7);
       ctx.fillStyle = PAL.hair;
       ctx.fillRect(x + 3, y - 2, h.w - 6, 4); ctx.fillRect(x + 3, y, 2, 4); ctx.fillRect(x + h.w - 5, y, 2, 4);
+      ctx.fillStyle = PAL.boneHi; ctx.fillRect(x + 3, y - 2, h.w - 6, 1);  // hair top sheen
       ctx.fillStyle = PAL.black; ctx.fillRect(x + (dir < 0 ? 5 : h.w - 7), y + 3, 2, 1); // eye
 
       // Power Sword — glows with lightning while charging (weak-spot tell).
@@ -569,6 +666,8 @@ class HeManBattleCat {
         ctx.beginPath(); ctx.moveTo(swX, y - 14); ctx.lineTo(swX, y + 6); ctx.stroke();
         ctx.fillStyle = `rgba(255,210,63,${0.4 + glow * 0.6})`;   // weak-spot marker
         ctx.fillRect(x + 3, y + 8, h.w - 6, 6);
+        ctx.strokeStyle = PAL.black; ctx.lineWidth = 1;           // dark ring keeps it distinct from gold straps
+        ctx.strokeRect(x + 3, y + 8, h.w - 6, 6);
         ctx.strokeStyle = PAL.cyan; ctx.lineWidth = 1;            // lightning arcs
         for (let i = 0; i < 3; i++) {
           ctx.beginPath();
@@ -579,6 +678,8 @@ class HeManBattleCat {
       } else {
         ctx.strokeStyle = PAL.gray; ctx.lineWidth = 2;            // hilt + blade
         ctx.beginPath(); ctx.moveTo(swX, y - 10); ctx.lineTo(swX, y + 6); ctx.stroke();
+        ctx.strokeStyle = PAL.white; ctx.lineWidth = 1;           // blade gleam
+        ctx.beginPath(); ctx.moveTo(swX - 0.5, y - 9); ctx.lineTo(swX - 0.5, y - 1); ctx.stroke();
         ctx.strokeStyle = PAL.havoc; ctx.lineWidth = 1;
         ctx.beginPath(); ctx.moveTo(swX - 3, y + 2); ctx.lineTo(swX + 3, y + 2); ctx.stroke(); // crossguard
       }
