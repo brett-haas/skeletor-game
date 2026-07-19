@@ -444,8 +444,11 @@ class Level3 extends Level {
     this.checkpoints = [60, 400, 800, 1400, 2000];
 
     // ---- Homing energy turrets on the climb ----
+    // Stop at py>400 so the topmost turret (would-be py=280) is omitted: it sat
+    // right where the player mounts the hallway floor and only cluttered the
+    // transition. Turrets now flank py = 1240, 1000, 760, 520.
     let ci = 0;
-    for (let py = 1240; py > 260; py -= 240) {
+    for (let py = 1240; py > 400; py -= 240) {
       const side = (ci++ % 2 === 0) ? 20 : 260;
       const cx = side, cy = py;
       this.spawners.push({
@@ -485,7 +488,9 @@ class Level3 extends Level {
     for (const s of this.spawners) {
       if (s.done) continue;
       if (s.byHeight) {
-        if (p.y <= s.atY) { s.done = true; s.make(); }
+        // Climb turrets are a climb-phase threat only — never spawn them once
+        // the fight has moved to the hallway (where a low p.y would trip them).
+        if (this.phase === 'climb' && p.y <= s.atY) { s.done = true; s.make(); }
       } else if (this.phase === 'hallway') {
         if (p.x >= s.atX) { s.done = true; s.make(); }
       }
@@ -494,6 +499,10 @@ class Level3 extends Level {
     // Transition from climb to hallway once the player reaches the top landing.
     if (this.phase === 'climb' && p.y <= 200 && p.x < 120) {
       this.phase = 'hallway';
+      // The climb is behind us: purge its floating turrets and their homing
+      // bolts so they can't snipe the hallway boss fight from off-screen below.
+      this.engine.enemies = this.engine.enemies.filter((e) => e.behavior !== 'homing-turret');
+      this.engine.enemyShots = this.engine.enemyShots.filter((s) => !s.homing);
       this.engine.banner('THE FINAL HALLWAY', 130);
     }
 

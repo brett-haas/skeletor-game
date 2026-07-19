@@ -424,7 +424,7 @@ class HeManBattleCat {
     // Phase 2 — He-Man on foot.
     this.hero = {
       x: x + 10, y: groundY - 30, w: 18, h: 30, hp: 26, maxHp: 26,
-      charging: false, chargeT: 0, cooldownT: 120, hurtT: 0, dir: -1,
+      charging: false, chargeT: 0, cooldownT: 120, hurtT: 0, dir: -1, boltT: 0,
     };
     this.shockwaves = [];
   }
@@ -498,14 +498,26 @@ class HeManBattleCat {
     h.dir = sign(p.x - h.x) || -1;
 
     if (!h.charging) {
-      // Pace toward the player and periodically fire deflectable bolts.
-      h.x += sign(p.x - h.x) * 0.5;
+      // Pace to a firing STANDOFF, never point-blank: a bolt loosed in the
+      // player's face lands before a jump can lift them clear, breaking the
+      // "jump the bolts" contract. Hold ~70px so every bolt is dodgeable.
+      const gap = Math.abs(p.x - h.x);
+      if (gap > 70) h.x += sign(p.x - h.x) * 0.5;
+      else if (gap < 50) h.x -= sign(p.x - h.x) * 0.5;
       if (--h.cooldownT <= 0) {
         // Begin charging the sword with lightning -> opens the weak spot.
         h.charging = true; h.chargeT = 0;
       }
       // Occasional sword-bolt (harmless-looking but lethal) at the player.
-      if (Math.random() < 0.02) {
+      // A minimum spacing (boltT) keeps bolts far enough apart that each is
+      // individually jumpable — without it a random cluster of three could
+      // arrive inside a single jump's airtime and become undodgeable.
+      if (h.boltT > 0) h.boltT--;
+      // Only loose a bolt at a GROUNDED player. Firing while they are airborne
+      // (dodging a prior threat) sends a bolt that lands the instant they touch
+      // down, with no time to re-jump — an unfair, undodgeable overlap.
+      if (h.boltT <= 0 && p.onGround && Math.random() < 0.02) {
+        h.boltT = randInt(50, 90);
         const b = new Projectile(h.x, h.y + 8, sign(p.x - h.x) * 3.4, 0, {
           kind: 'sword', r: 4, color: PAL.hero, life: 120, dmg: 1,
         });

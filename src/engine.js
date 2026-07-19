@@ -506,7 +506,12 @@ class GameEngine {
         case 'homing-turret':
           if (--e.fireT <= 0) {
             e.fireT = randInt(80, 130);
-            this.enemyShots.push(new Projectile(e.x + e.w / 2, e.y + e.h / 2, 0, 0.5,
+            // Launch AT the player with a real speed (~2). The homing lerp keeps
+            // the current magnitude, so the initial launch speed IS the flight
+            // speed — a 0.5 dribble homed on nothing and hit nothing.
+            const a = Math.atan2((p.y + p.h / 2) - (e.y + e.h / 2), p.x - e.x);
+            this.enemyShots.push(new Projectile(e.x + e.w / 2, e.y + e.h / 2,
+              Math.cos(a) * 2, Math.sin(a) * 2,
               { kind: 'ebolt', r: 3, color: PAL.purple, life: 200, homing: 0.025 }));
           }
           break;
@@ -645,10 +650,14 @@ class GameEngine {
         }
       }
       s.update(this);
-      // Cull.
+      // Cull. Both axes must be camera-relative: in the vertical Level 3 climb
+      // the camera scrolls in Y, so testing raw world-y against the screen box
+      // culled every bolt the instant it spawned (its world-y sits far below the
+      // viewport top). Match the render transform (world - cam) on both axes.
       if (this.level.mode === MODE.SIDE) {
         const relX = s.x - this.camera.x;
-        if (relX < -60 || relX > VW + 60 || s.y > VH + 60 || s.y < -60) s.dead = true;
+        const relY = s.y - this.camera.y;
+        if (relX < -60 || relX > VW + 60 || relY > VH + 60 || relY < -60) s.dead = true;
       } else if (s.x < -30 || s.x > VW + 30 || s.y > VH + 30 || s.y < -30) s.dead = true;
 
       // Lethal vs player.
