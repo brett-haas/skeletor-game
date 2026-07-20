@@ -101,3 +101,28 @@ test('each level gates in its correct boss', () => {
   g.step(2);
   assert.ok(g.boss instanceof g.classes.HeManBattleCat, 'L3 boss is He-Man & Battle Cat');
 });
+
+test('L3 player shots survive the vertical climb (camera scrolls in Y)', () => {
+  // Regression: the player-shot cull tested RAW world-y against the screen box,
+  // so during L3's tall climb (camera.y scrolled far down) every bolt was culled
+  // the frame it spawned — the weapon was dead for the whole climb. The cull must
+  // be camera-relative on BOTH axes, like the enemy-shot cull.
+  const g = createGame();
+  g.loadLevel(2);
+  const lvl = g.level;
+  const p = g.player;
+  assert.equal(lvl.phase, 'climb', 'starts in the climb phase');
+
+  p.x = lvl.startX; p.y = lvl.startY; p.vy = 0; p.onGround = true;
+  p.setWeapon(g.C.WEAPON.DEFAULT);
+  p.facing = 1;
+  p.invuln = 100000;          // rule out contact deaths, isolate the cull
+  g.step(60);                 // let the follow-camera settle deep down the shaft
+
+  assert.ok(g.engine.camera.y > g.C.VH, 'camera has scrolled well past one screen down');
+  p.cooldown = 0;
+  g.engine.shots.length = 0;
+  g.hold('KeyJ');
+  g.step(1);
+  assert.ok(g.engine.shots.length >= 1, 'a bolt survives the frame it is fired on the climb');
+});

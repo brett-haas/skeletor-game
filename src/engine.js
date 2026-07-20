@@ -577,10 +577,16 @@ class GameEngine {
   _updateShots() {
     for (const s of this.shots) {
       s.update(this);
-      // Off-screen cull (world space for SIDE; screen for DEPTH).
+      // Off-screen cull. BOTH axes must be camera-relative for SIDE — same as
+      // the enemy-shot cull below. In Level 3's vertical climb the camera scrolls
+      // in Y, so testing raw world-y against the screen box (VH+40) killed every
+      // player shot the instant it spawned (world-y sits ~1300, far past 280),
+      // leaving the weapon dead for the whole climb. Match the render transform
+      // (world - cam) on both axes so shots live wherever the camera is looking.
       if (this.level.mode === MODE.SIDE) {
         const relX = s.x - this.camera.x;
-        if (relX < -40 || relX > VW + 40 || s.y < -40 || s.y > VH + 40) s.dead = true;
+        const relY = s.y - this.camera.y;
+        if (relX < -40 || relX > VW + 40 || relY < -40 || relY > VH + 40) s.dead = true;
       } else {
         if (s.x < -20 || s.x > VW + 20 || s.y < -20 || s.y > VH + 20) s.dead = true;
       }
