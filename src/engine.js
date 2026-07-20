@@ -200,29 +200,11 @@ class GameEngine {
     // the instant we snap the player back onto solid ground.
     p.jumpBufferT = 0; p.coyoteT = 0;
     if (this.level.mode === MODE.SIDE) {
-      const cx = this.level.checkpointFor(p.x);
-      p.x = cx;
-      // Snap onto the actual floor beneath the checkpoint column. The old
-      // `Math.min(startY - 30, VH)` clamp assumed a screen-height world and
-      // dropped Skeletor into the void on tall levels (L3's 1400px shaft):
-      // both startY and VH sat far above the real floor, so every respawn
-      // fell to its death in an endless loop. Find the lowest solid platform
-      // spanning the checkpoint and stand on it.
-      const centerX = cx + p.w / 2;
-      let floorY = null;
-      for (const plat of this.level.platforms) {
-        if (plat.gone) continue;
-        if (plat.x <= centerX && plat.x + plat.w >= centerX) {
-          if (floorY === null || plat.y > floorY) floorY = plat.y;
-        }
-      }
-      if (floorY !== null) {
-        p.y = floorY - p.h;
-        p.onGround = true;
-      } else {
-        // No platform under this column — fall back to a height inside the world.
-        p.y = Math.min(this.level.startY - 30, this.level.worldH - p.h);
-      }
+      // The level owns its geometry, so IT resolves the respawn position. This
+      // lets tall/multi-phase levels (L3's 1400px shaft + hallway) place the
+      // player correctly instead of a one-size-fits-all X-only checkpoint scan.
+      const { x, y, onGround } = this.level.respawnPos(p);
+      p.x = x; p.y = y; p.onGround = !!onGround;
     } else {
       p.lane = 0;
     }
@@ -1008,12 +990,9 @@ class GameEngine {
       ctx.fillRect(dir < 0 ? x - 3 : x + e.w - 1, y + 7, 4, 2);
     }
 
-    // Tiny HP pips for tougher foes. The mid-boss (Teela) is skipped — she has
-    // the dedicated top-center HUD bar, so no floating pip clutters her sprite.
-    if (e.maxHp > 1 && e.behavior !== 'battleram') {
-      ctx.fillStyle = PAL.toxic;
-      ctx.fillRect(x, y - 4, e.w * (e.hp / e.maxHp), 2);
-    }
+    // No floating HP pip on normal enemies — the rabble's remaining life is
+    // hidden from the player by design. Only bosses/mid-bosses show health, via
+    // their dedicated top/bottom HUD bars (_healthBar).
   }
 
   _drawDepthEnemy(ctx, e) {

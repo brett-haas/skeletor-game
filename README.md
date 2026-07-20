@@ -31,6 +31,7 @@ Press **ENTER** on the title screen to begin.
 | **J** | Fire (hold for auto-fire) |
 | **K** | Jump |
 | **Space** | Pause / resume |
+| **M** | Mute / unmute all audio (persists across reloads) |
 | **Enter** | Start game / return to menu from an end screen |
 
 Aiming is decoupled from movement: run one way while firing another, in any of
@@ -52,6 +53,18 @@ laptops keep the desktop layout. Override with a query string:
 - `index.html?touch` — force the touch overlay on (handy for testing on a
   desktop with a mouse)
 - `index.html?touch=0` — force the desktop layout, even on a touch device
+
+## Sound
+
+All audio is **synthesized procedurally with the Web Audio API** — no asset
+files, in keeping with the rest of the game. Chiptune sound effects (fire, jump,
+hits, enemy kills, power-ups, boss stingers, menu/level jingles) and a looping,
+tracker-style dark-fantasy background score are generated live from oscillators
+and noise. Audio wakes on your **first input** (the browser's autoplay policy
+forbids sound before a user gesture), the music **ducks while paused**, and
+**M** toggles mute — a preference that persists across reloads. Under the
+headless test harness there is no `AudioContext`, so the sound engine collapses
+to safe no-ops and never touches gameplay.
 
 ## Power-ups
 
@@ -104,6 +117,7 @@ skeletor-game/
 ├── package.json        # test script only — no runtime dependencies
 ├── src/
 │   ├── config.js       # resolution, physics constants, enums, palette
+│   ├── sound.js        # procedural Web Audio: chiptune SFX + looping music
 │   ├── utils.js        # math, AABB collision, shared draw helpers
 │   ├── input.js        # keyboard/touch state + 8-directional aim vectoring
 │   ├── camera.js       # 2D follow-camera + (dormant) pseudo-3D projector
@@ -132,6 +146,10 @@ they share one global scope, so no bundler or import/export is required.
   edge-triggered presses for jump/pause/start. On-screen touch controls feed the
   same `Set` via `input.press`/`input.release`, so the engine is input-agnostic.
 - **Collision:** axis-aligned bounding boxes (AABB) for side-scrolling levels.
+- **Procedural audio** (`SoundEngine`, exposed as `SFX`): Web Audio SFX and
+  music synthesized at runtime, with separate SFX/music sub-buses (music ducks
+  on pause), lazy context creation on first gesture, and a headless no-op guard
+  that keeps the test suite silent and green.
 
 ## Tests
 

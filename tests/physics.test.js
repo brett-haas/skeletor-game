@@ -474,6 +474,42 @@ test('Level 3 climb: every-other ledge collapses, launchpad + exit are solid, re
   assert.equal(dead.y, dead.baseY, 'respawn restores ledge to its base height');
 });
 
+test('Level 3 hallway death respawns in the hallway, not back down the shaft', () => {
+  // Regression: dying to the first hallway guard (elite(400), atX=240) rewound
+  // the player all the way to the bottom of the climb — the X-only checkpoint
+  // resolved x≈250 to checkpoint 60, and the "lowest platform under X" scan
+  // picked the shaft's start floor (y=1370) over the hall floor (y=200). Worse,
+  // the climb turrets had been purged on entry and never came back. A hallway
+  // death must keep the player IN the hallway.
+  const g = createGame();
+  g.loadLevel(2);
+  const lvl = g.level;
+  const p = g.player;
+
+  // Stand in the hallway just past where the first guard appears, mirroring the
+  // real climb->hallway transition (phase flipped, climb turrets purged).
+  lvl.phase = 'hallway';
+  g.engine.enemies = g.engine.enemies.filter((e) => e.behavior !== 'homing-turret');
+  p.x = 250;
+  p.y = lvl.groundY - p.h;
+  p.onGround = true;
+
+  g.engine.respawn();
+
+  assert.equal(p.y, lvl.groundY - p.h, 'respawns on the hallway floor, not the shaft bottom');
+  assert.ok(p.x >= lvl.hallStartX, 'respawns at/after the hallway landing, never down the shaft');
+  assert.equal(lvl.phase, 'hallway', 'stays in the hallway phase after respawn');
+
+  // Turrets belong to the climb — the hallway must stay clear of them.
+  const turrets = g.engine.enemies.filter((e) => e.behavior === 'homing-turret');
+  assert.equal(turrets.length, 0, 'no climb turrets resurrected in the hallway');
+
+  // And a checkpoint deeper in the hall keeps that progress (no rewind to the top).
+  p.x = 900; p.y = lvl.groundY - p.h;
+  g.engine.respawn();
+  assert.ok(p.x >= 800, 'a deeper hallway death respawns at the checkpoint passed, not the landing');
+});
+
 test('Level 3 climb: falling below your highest foothold is fatal (no soft-lock)', () => {
   const g = createGame();
   g.loadLevel(2);

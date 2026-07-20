@@ -57,6 +57,25 @@ class Level {
     for (const c of this.checkpoints) if (c <= x + 40) best = c;
     return best;
   }
+
+  // Resolve the SIDE-mode respawn position. Snap to the nearest checkpoint
+  // column, then stand on the LOWEST solid platform spanning it. The old
+  // `Math.min(startY - 30, VH)` fallback assumed a screen-height world and
+  // dropped the player into the void on tall levels — so a real floor is
+  // always preferred. Tall/phased levels override this for phase-aware placement.
+  respawnPos(p) {
+    const cx = this.checkpointFor(p.x);
+    const centerX = cx + p.w / 2;
+    let floorY = null;
+    for (const plat of this.platforms) {
+      if (plat.gone) continue;
+      if (plat.x <= centerX && plat.x + plat.w >= centerX) {
+        if (floorY === null || plat.y > floorY) floorY = plat.y;
+      }
+    }
+    if (floorY !== null) return { x: cx, y: floorY - p.h, onGround: true };
+    return { x: cx, y: Math.min(this.startY - 30, this.worldH - p.h), onGround: false };
+  }
 }
 
 /* -------------------------------------------------------------------------
@@ -539,6 +558,22 @@ class Level3 extends Level {
       plat.gone = false;
       if (plat.baseY !== undefined) plat.y = plat.baseY;
     }
+  }
+
+  // Phase-aware respawn. A HALLWAY death keeps the player in the hallway — the
+  // climb (and its now-purged homing turrets) is behind them, so the base
+  // "lowest platform under this X" scan would cruelly rewind them to the shaft
+  // bottom (X=60 exists at BOTH the start floor y=1370 AND the hall floor y=200,
+  // and the base picks the lowest). Instead, land on the hallway floor at the
+  // nearest hallway checkpoint, never before the top landing. CLIMB deaths fall
+  // through to the default, dropping to the pristine shaft bottom so the
+  // collapsing-ledge climb stays fully replayable.
+  respawnPos(p) {
+    if (this.phase === 'hallway') {
+      const cx = Math.max(this.hallStartX, this.checkpointFor(p.x));
+      return { x: cx, y: this.groundY - p.h, onGround: true };
+    }
+    return super.respawnPos(p);
   }
 
   update(dt) {

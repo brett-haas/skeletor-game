@@ -19,7 +19,7 @@ Requires Node 18+ (developed on Node 24).
 | File | Verifies |
 |------|----------|
 | `state.test.js` | State machine: MENU → PLAYING → PAUSED → LEVEL_TRANSITION → GAME_OVER / VICTORY, respawn + weapon-loss |
-| `physics.test.js` | Jump/gravity, pit death, and a **regression guard** that every pit is jumpable or bridged |
+| `physics.test.js` | Jump/gravity, pit death, a **regression guard** that every pit is jumpable or bridged, and Level 3's climb (collapsing ledges, fatal falls) + hallway-respawn placement |
 | `input.test.js` | Aim vectoring: diagonal normalization (~0.7071) and the idle-facing divide-by-zero guard |
 | `weapons.test.js` | Each weapon's shot shape, cooldown, BARRIER i-frames, FLAME DPS + range falloff |
 | `combat.test.js` | Life-loss rules: exactly one life per death, the dead/invulnerable guard, enemy contact death |
@@ -28,6 +28,7 @@ Requires Node 18+ (developed on Node 24).
 | `levels.test.js` | Per-level mode/bounds, spawner triggers, lethal hazards, boss gates |
 | `bosses.test.js` | Weak-point mechanics: Man-At-Arms core, Sorceress ward, He-Man charge window |
 | `playthrough.test.js` | Assisted full-campaign run to VICTORY + chaotic-input crash-safety soak |
+| `sound.test.js` | Procedural audio: headless no-op guard, every SFX method crash-safe, mute toggle, playthrough drives the SFX/music hooks |
 | `harness.test.js` | The harness rig's own contract: seeded-PRNG determinism, `seed:0` restores native randomness |
 
 ## How it works
