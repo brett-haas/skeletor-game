@@ -976,8 +976,11 @@ class GameEngine {
       ctx.fillStyle = PAL.havoc; ctx.fillRect(tx, ty + 9, 8, 2);                     // gold belt
       ctx.fillStyle = PAL.skin; ctx.fillRect(tx + 1, ty, 6, 6);                      // head
       ctx.fillStyle = PAL.teela; ctx.fillRect(tx, ty - 2, 8, 3); ctx.fillRect(tx - 1, ty, 2, 6); // hair
-      ctx.strokeStyle = PAL.havoc; ctx.lineWidth = 1;                               // staff
-      ctx.beginPath(); ctx.moveTo(tx + 9, ty - 2); ctx.lineTo(tx + 9, ty + 13); ctx.stroke();
+      // ---- Raised sword ----
+      ctx.fillStyle = hurt ? PAL.white : PAL.steel; ctx.fillRect(tx + 9, ty - 6, 2, 11);  // blade
+      ctx.fillStyle = PAL.bone;  ctx.fillRect(tx + 9, ty - 6, 1, 11);                      // edge highlight
+      ctx.fillStyle = PAL.havoc; ctx.fillRect(tx + 7, ty + 4, 6, 1);                       // gold crossguard
+      ctx.fillStyle = PAL.brown; ctx.fillRect(tx + 9, ty + 5, 2, 3);                       // grip
 
     } else {
       // ---- Foot soldier: jungle guard (walker) or Grayskull elite ----
@@ -1005,8 +1008,9 @@ class GameEngine {
       ctx.fillRect(dir < 0 ? x - 3 : x + e.w - 1, y + 7, 4, 2);
     }
 
-    // Tiny HP pips for tougher foes.
-    if (e.maxHp > 1) {
+    // Tiny HP pips for tougher foes. The mid-boss (Teela) is skipped — she has
+    // the dedicated top-center HUD bar, so no floating pip clutters her sprite.
+    if (e.maxHp > 1 && e.behavior !== 'battleram') {
       ctx.fillStyle = PAL.toxic;
       ctx.fillRect(x, y - 4, e.w * (e.hp / e.maxHp), 2);
     }
