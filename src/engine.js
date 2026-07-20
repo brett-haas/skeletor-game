@@ -120,6 +120,7 @@ class GameEngine {
     this.levelIndex = 0;
     this.loadLevel(0);
     this.state = STATE.PLAYING;
+    SFX.menuSelect();
   }
 
   loadLevel(idx) {
@@ -136,6 +137,8 @@ class GameEngine {
   advanceLevel() {
     if (this.levelIndex >= this.levelFactories.length - 1) {
       this.state = STATE.VICTORY;
+      SFX.stopMusic();
+      SFX.victoryJingle();
     } else {
       this.levelIndex++;
       this.state = STATE.LEVEL_TRANSITION;
@@ -172,6 +175,7 @@ class GameEngine {
     this.flashT = 8;
     this.lives--;
     this.banner('SKELETOR FALLS!', 60);
+    SFX.playerDeath();
 
     setTimeout(() => {}, 0); // (no async needed; respawn handled in update)
     this._respawnTimer = 45;
@@ -253,6 +257,9 @@ class GameEngine {
       else if (this.state === STATE.PAUSED) this.state = STATE.PLAYING;
     }
 
+    // Global: mute toggle (M) — for the minion who craves SILENCE.
+    if (inp.tapped('KeyM')) SFX.toggleMute();
+
     switch (this.state) {
       case STATE.MENU:
         if (inp.tapped('Enter') || inp.tapped('KeyK')) this.startGame();
@@ -282,7 +289,34 @@ class GameEngine {
     if (this.shakeT > 0) this.shakeT--;
     if (this.flashT > 0) this.flashT--;
 
+    this._syncMusic();
     inp.endFrame();
+  }
+
+  /* ---- Background-music orchestration ----
+   * Maps the state machine to a looping track each frame. playMusic() dedups
+   * by name, so calling it every frame is a no-op once the loop is running;
+   * the level<->boss switch rides `this.boss` automatically. Victory / game-
+   * over stings and the boss-defeat fanfare fire once at their transitions
+   * (see advanceLevel / _updatePlaying / boss-defeat). Inert under the harness. */
+  _syncMusic() {
+    switch (this.state) {
+      case STATE.MENU:
+        SFX.playMusic('menu');
+        break;
+      case STATE.PLAYING:
+        SFX.duckMusic(false);
+        SFX.playMusic(this.boss ? 'boss' : 'level');
+        break;
+      case STATE.PAUSED:
+        SFX.duckMusic(true);
+        break;
+      case STATE.LEVEL_TRANSITION:
+      case STATE.VICTORY:
+      case STATE.GAME_OVER:
+        SFX.stopMusic();
+        break;
+    }
   }
 
   _updatePlaying() {
@@ -293,7 +327,7 @@ class GameEngine {
     // Handle respawn timer / game over.
     if (p.dead) {
       if (this._respawnTimer > 0 && --this._respawnTimer === 0) {
-        if (this.lives <= 0) { this.state = STATE.GAME_OVER; return; }
+        if (this.lives <= 0) { this.state = STATE.GAME_OVER; SFX.gameOverJingle(); return; }
         this.respawn();
       }
       // Still update particles while dead.
@@ -336,6 +370,7 @@ class GameEngine {
       this.boss = null;
       this.banner('CONQUEST! LEVEL CLEARED!', 120);
       this._levelClearTimer = 90;
+      SFX.bossDefeat();
     }
     if (this._levelClearTimer > 0 && --this._levelClearTimer === 0) {
       this.advanceLevel();
@@ -384,6 +419,7 @@ class GameEngine {
       p.jumpBufferT = 0;
       p.coyoteT = 0;
       p.jumpCut = false;   // fresh jump: full rise until the button is released
+      SFX.jump();
     }
     if (p.jumpBufferT > 0) p.jumpBufferT--;
     if (p.coyoteT > 0) p.coyoteT--;
@@ -489,6 +525,7 @@ class GameEngine {
       wpn.fire(this, pr.sx, pr.sy - p.h, aim);
     }
     p.cooldown = wpn.cooldown;
+    SFX.fire(p.weapon);
   }
 
   /* ---- Enemy updates + behaviors ---- */
@@ -606,6 +643,7 @@ class GameEngine {
           e.damage(s.dmg);
           this.spawnBurst(s.x, s.y, e.color, 4);
           if (e.dead) this._onEnemyKilled(e);
+          else SFX.hit();
           if (s.pierce) s.hitSet.add(e);
           else { s.dead = true; break; }
         }
@@ -614,6 +652,7 @@ class GameEngine {
       // vs boss.
       if (!s.dead && this.boss && this.boss.hitTest) {
         const absorbed = this.boss.hitTest(s);
+        if (absorbed) SFX.bossHit();
         if (absorbed && !s.pierce) s.dead = true;
       }
     }
@@ -622,6 +661,7 @@ class GameEngine {
 
   _onEnemyKilled(e) {
     this.score += 100;
+    SFX.enemyKill();
     this.spawnBurst(e.x + e.w / 2, e.y + e.h / 2, e.color, 8);
     if (e.drop) {
       // Spawn the power-up where the foe fell.
@@ -712,6 +752,7 @@ class GameEngine {
       if (aabb(pbox, box)) {
         p.setWeapon(pu.type);
         this.score += 250;
+        SFX.powerup();
         this.spawnBurst(pu.x, pu.y, PAL.havoc, 12);
         this.banner(`GAINED: ${Weapons[pu.type].name}!`, 70);
         pu.dead = true;
@@ -1061,6 +1102,11 @@ class GameEngine {
     if (this.boss) {
       this._healthBar(ctx, 20, VH - 12, VW - 40, this.boss.hp / this.boss.maxHp, PAL.blood, this._bossName());
     }
+
+    // Muted indicator — a quiet little reminder the Havoc Staff is silenced.
+    if (typeof SFX !== 'undefined' && SFX.muted) {
+      this._text(ctx, 'MUTED', 4, VH - 12, PAL.stone, 'left', 7);
+    }
   }
 
   // Reusable labeled health bar: dark trough, colored fill, bone frame + label.
@@ -1100,7 +1146,7 @@ class GameEngine {
     if (Math.floor(this.frame / 30) % 2 === 0) {
       this._text(ctx, 'PRESS ENTER TO CONQUER', VW / 2, 180, PAL.bone, 'center', 9);
     }
-    this._text(ctx, 'WASD MOVE/AIM · J FIRE · K JUMP · SPACE PAUSE', VW / 2, 210, PAL.stone, 'center', 7);
+    this._text(ctx, 'WASD MOVE/AIM · J FIRE · K JUMP · SPACE PAUSE · M MUTE', VW / 2, 210, PAL.stone, 'center', 7);
   }
 
   _renderTransition(ctx) {

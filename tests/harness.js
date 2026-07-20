@@ -27,7 +27,7 @@ const SRC_DIR = path.join(__dirname, '..', 'src');
 
 // Load order mirrors index.html's <script> tags exactly.
 const LOAD_ORDER = [
-  'config.js', 'utils.js', 'input.js', 'camera.js', 'weapons.js',
+  'config.js', 'sound.js', 'utils.js', 'input.js', 'camera.js', 'weapons.js',
   'entities.js', 'bosses.js', 'levels.js', 'engine.js', 'main.js',
 ];
 
@@ -41,6 +41,7 @@ const EXPORTS = [
   'MOVE_ACCEL', 'MOVE_MAX_SPEED', 'JUMP_VELOCITY', 'TURN_BOOST',
   'RISE_GRAVITY', 'FALL_GRAVITY',
   'clamp', 'lerp', 'rand', 'randInt', 'sign', 'aabb',
+  'SFX',
 ];
 
 // Concatenate the game once at module load, with an epilogue that publishes

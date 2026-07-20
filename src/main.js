@@ -41,6 +41,9 @@ function setupFullscreen(engine) {
   const goFullscreen = () => {
     document.removeEventListener('pointerdown', goFullscreen);
     document.removeEventListener('keydown', goFullscreen);
+    // The autoplay policy forbids sound before a user gesture — this IS that
+    // gesture, so wake the Havoc Staff's voice here.
+    if (typeof SFX !== 'undefined') SFX.resume();
     // Already commanding the full screen? Then our work here is done.
     const fsEl = document.fullscreenElement || document.webkitFullscreenElement;
     if (fsEl) return;
@@ -170,6 +173,7 @@ function setupTouchControls(engine) {
     el.addEventListener('pointerdown', (e) => {
       el.setPointerCapture(e.pointerId);
       el.classList.add('active');
+      if (typeof SFX !== 'undefined') SFX.resume();
       onDown();
       e.preventDefault();
     });
