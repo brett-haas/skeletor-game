@@ -694,7 +694,7 @@ class HeManBattleCat {
       ctx.moveTo(x + 2, y + 7); ctx.lineTo(x + h.w - 2, y + 15);
       ctx.moveTo(x + h.w - 2, y + 7); ctx.lineTo(x + 2, y + 15); ctx.stroke();
       // Head + blond bowl cut.
-      ctx.fillStyle = PAL.skin; ctx.fillRect(x + 4, y, h.w - 8, 7);
+      ctx.fillStyle = hurt ? PAL.white : PAL.skin; ctx.fillRect(x + 4, y, h.w - 8, 7);
       ctx.fillStyle = PAL.hair;
       ctx.fillRect(x + 3, y - 2, h.w - 6, 4); ctx.fillRect(x + 3, y, 2, 4); ctx.fillRect(x + h.w - 5, y, 2, 4);
       ctx.fillStyle = PAL.boneHi; ctx.fillRect(x + 3, y - 2, h.w - 6, 1);  // hair top sheen
