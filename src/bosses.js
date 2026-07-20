@@ -49,6 +49,14 @@ class ManAtArms {
     return { x: this.x + this.core.ox, y: this.y + this.core.oy, w: this.core.w, h: this.core.h };
   }
 
+  // Arena wall: the front face of the war-machine. The player's right edge may
+  // not advance past it while he lives — this stationary boss fires his beam
+  // and lobs grenades only toward his LEFT (his front), so letting the player
+  // slip behind left a dead zone where every attack missed and the core could
+  // be plinked risk-free. Locking the player to the front keeps the fight the
+  // carefully-tuned "jump the beam" duel it was built to be.
+  get wallX() { return this.x; }
+
   update() {
     this.t++;
     if (this.hurtT > 0) this.hurtT--;

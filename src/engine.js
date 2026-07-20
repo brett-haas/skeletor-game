@@ -432,6 +432,16 @@ class GameEngine {
     // Integrate X, then resolve horizontal collisions against solid platforms.
     p.x += p.vx;
     p.x = clamp(p.x, 0, this.level.worldW - p.w);
+    // Boss arena wall: a boss may expose `wallX`, the world-x the player's right
+    // edge may not pass while it lives (Man-At-Arms fires only toward his front,
+    // so slipping behind him left a risk-free dead zone). Only bosses that define
+    // wallX are affected.
+    if (this.boss && typeof this.boss.wallX === 'number') {
+      const wall = this.boss.wallX - p.w;
+      // Kill rightward momentum when the wall actually caps advance, so a lingering
+      // +vx doesn't fire the TURN_BOOST skid the instant the player turns to retreat.
+      if (p.x > wall) { p.x = wall; if (p.vx > 0) p.vx = 0; }
+    }
     for (const plat of this.level.platforms) {
       if (plat.gone) continue;
       if (plat.h <= 12) continue;            // thin one-way ledges never block sideways

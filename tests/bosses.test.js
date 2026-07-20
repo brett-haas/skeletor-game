@@ -34,6 +34,46 @@ test('Man-At-Arms: the wall absorbs hits, only the core takes damage', () => {
   assert.ok(boss.hp < full, 'the core is the weak point');
 });
 
+test('Man-At-Arms: arena lock keeps the player at his front — no slipping behind', () => {
+  const g = createGame();
+  g.loadLevel(0);
+
+  // Trip the boss gate so Man-At-Arms materialises at world end.
+  g.player.x = g.level.bossX;
+  g.step(1);
+  assert.ok(g.boss instanceof g.classes.ManAtArms, 'Man-At-Arms spawned at the gate');
+
+  const p = g.player;
+  const wall = g.boss.wallX;               // front face of the war-machine
+  assert.equal(wall, g.boss.x, 'wall sits at the machine front');
+
+  // Barrel RIGHT into (and past) him for a good while. keepAlive() each frame
+  // so the beam/grenades never end the run early and we isolate the position.
+  g.hold('KeyD');
+  for (let i = 0; i < 240; i++) {
+    g.keepAlive();
+    g.step(1);
+    assert.ok(p.x + p.w <= wall + 1e-6,
+      `frame ${i}: right edge ${p.x + p.w} must stay at/left of the wall ${wall}`);
+  }
+  g.release('KeyD');
+
+  // ...and he should be pinned flush to the front, not stalled short of it.
+  assert.ok(p.x + p.w >= wall - 1, 'player advances right up to the wall');
+});
+
+test('arena lock is opt-in: only Man-At-Arms exposes a numeric wallX', () => {
+  const g = createGame();
+  // The clamp keys off `typeof boss.wallX === 'number'`, so the other bosses
+  // must NOT define one — their fights rely on free movement around them.
+  const maa = new g.classes.ManAtArms(g.engine, 1000, 200);
+  const ss = new g.classes.SorceressStratos(g.engine, 3000, 200);
+  const hm = new g.classes.HeManBattleCat(g.engine, 2000, 200);
+  assert.equal(typeof maa.wallX, 'number', 'Man-At-Arms walls the arena');
+  assert.notEqual(typeof ss.wallX, 'number', 'Sorceress/Stratos does not wall');
+  assert.notEqual(typeof hm.wallX, 'number', 'He-Man/Battle Cat does not wall');
+});
+
 test('Sorceress is warded until Stratos falls, then vulnerable', () => {
   const g = createGame();
   g.loadLevel(1);
