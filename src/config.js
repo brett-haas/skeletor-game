@@ -79,12 +79,19 @@ const PAL = {
   black:  '#05060a',
   bone:   '#e9e4d0',   // Skeletor's skull
   boneSh: '#b8b199',
+  skull:  '#e4dcae',   // Skeletor's face — warm bone, distinct from armour bone
+  skullSh:'#a9a074',   // skull cheek / brow / jaw shadow
+  skullHi:'#fbf6d0',   // skull lit cheekbone highlight
   hood:   '#3a6ea5',   // his blue cowl
   hoodDk: '#26507d',
   purple: '#7d4bd6',
   purpleDk:'#4a2a86',
   havoc:  '#ffd23f',   // Havoc Staff energy / pickups
   blood:  '#c0392b',
+  bloodDk:'#782018',   // darkened blood — turret core rim, plume shadow
+  cyanDk: '#288282',   // darkened cyan — elite cape / pauldron trim
+  clay:   '#966042',   // grunt hide / skin
+  clayDk: '#603c28',   // grunt hide shadow / club handle
   ember:  '#ff7b2e',
   toxic:  '#5bd94f',
   sky1:   '#1a1030',

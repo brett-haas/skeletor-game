@@ -909,24 +909,57 @@ class GameEngine {
     const x = e.x - cam.x, y = e.y - cam.y;
     const hurt = e.hurtT > 0;
 
-    if (e.behavior === 'turret' || e.behavior === 'homing-turret') {
-      // ---- Palace Guard turret: bunkered emplacement with a swivel barrel ----
-      const energy = e.behavior === 'homing-turret' ? PAL.purple : PAL.blood;
+    if (e.behavior === 'turret') {
+      // ---- Palace Guard turret: squat, floor-bolted bunker with a fixed forward cannon ----
       const hull = hurt ? PAL.white : PAL.steel;
-      const barrelDir = (this.player && this.player.x < e.x) ? -1 : 1;
-      // Barrel aimed roughly at the player.
-      ctx.fillStyle = PAL.stoneD;
-      ctx.fillRect(x + e.w / 2 - 2 + barrelDir * 4, y - 3, 4, 7);
-      // Base plate + armored dome.
-      ctx.fillStyle = PAL.stoneD; ctx.fillRect(x, y + e.h - 4, e.w, 4);
-      ctx.fillStyle = hull; ctx.fillRect(x + 1, y + 2, e.w - 2, e.h - 5);
-      ctx.fillStyle = PAL.gray; ctx.fillRect(x + 1, y + 2, e.w - 2, 1);
-      // Glowing energy core.
-      ctx.fillStyle = energy; ctx.fillRect(x + 3, y + 5, e.w - 6, 4);
-      ctx.fillStyle = PAL.white; ctx.fillRect(x + e.w / 2 - 1, y + 6, 2, 2);
-      // Rivets.
+      const dir = (this.player && this.player.x < e.x) ? -1 : 1;
+      // Heavy base plate bolted to the ground (wider than the housing).
+      ctx.fillStyle = PAL.stoneD; ctx.fillRect(x - 1, y + e.h - 5, e.w + 2, 5);
+      ctx.fillStyle = PAL.black;  ctx.fillRect(x - 1, y + e.h - 1, e.w + 2, 1);
+      ctx.fillStyle = PAL.gray; // floor bolts
+      for (let bx = x + 1; bx < x + e.w; bx += 5) ctx.fillRect(bx, y + e.h - 3, 1, 1);
+      // Boxy armored housing with bevelled edges.
+      ctx.fillStyle = hull;    ctx.fillRect(x + 2, y + 4, e.w - 4, e.h - 8);
+      ctx.fillStyle = PAL.gray; ctx.fillRect(x + 2, y + 4, e.w - 4, 1); ctx.fillRect(x + 2, y + 4, 1, e.h - 8);
+      ctx.fillStyle = PAL.stone; ctx.fillRect(x + e.w - 3, y + 4, 1, e.h - 8);
+      // Angry red energy core slit.
+      ctx.fillStyle = PAL.bloodDk; ctx.fillRect(x + 4, y + 8, e.w - 8, 4);
+      ctx.fillStyle = PAL.blood;   ctx.fillRect(x + 5, y + 9, e.w - 10, 2);
+      ctx.fillStyle = PAL.white;   ctx.fillRect(x + e.w / 2 - 1, y + 9, 2, 2);
+      // Corner rivets.
       ctx.fillStyle = PAL.gray;
-      ctx.fillRect(x + 2, y + e.h - 3, 1, 1); ctx.fillRect(x + e.w - 3, y + e.h - 3, 1, 1);
+      ctx.fillRect(x + 3, y + 5, 1, 1); ctx.fillRect(x + e.w - 4, y + 5, 1, 1);
+      // Single thick FIXED cannon aimed at the player.
+      const bx = dir < 0 ? x - 6 : x + e.w - 2;
+      ctx.fillStyle = PAL.stoneD; ctx.fillRect(bx, y + 6, 8, 5);
+      ctx.fillStyle = PAL.gray;   ctx.fillRect(bx, y + 6, 8, 1);
+      ctx.fillStyle = PAL.black;  ctx.fillRect(dir < 0 ? x - 7 : x + e.w + 5, y + 5, 2, 7);
+
+    } else if (e.behavior === 'homing-turret') {
+      // ---- Homing energy turret: a FLOATING octagonal eye-drone with orbiting nodes ----
+      const core = hurt ? PAL.white : PAL.purple;
+      const hull = hurt ? PAL.white : PAL.steel;
+      const cx = x + e.w / 2, cy = y + e.h / 2;
+      // Orbiting ring nodes on either side (imply spin).
+      ctx.fillStyle = PAL.purpleDk;
+      ctx.fillRect(x - 3, cy - 2, 4, 4); ctx.fillRect(x + e.w - 1, cy - 2, 4, 4);
+      ctx.fillStyle = PAL.cyan;
+      ctx.fillRect(x - 3, cy - 2, 4, 1); ctx.fillRect(x + e.w - 1, cy + 1, 4, 1);
+      // Octagonal hull (two overlapping bars chamfer the corners — no legs, no base).
+      ctx.fillStyle = hull;
+      ctx.fillRect(x + 3, y + 1, e.w - 6, e.h - 2); ctx.fillRect(x + 1, y + 3, e.w - 2, e.h - 6);
+      ctx.fillStyle = PAL.gray;  ctx.fillRect(x + 3, y + 1, e.w - 6, 1);
+      ctx.fillStyle = PAL.stone; ctx.fillRect(x + 3, y + e.h - 2, e.w - 6, 1);
+      // Sensor fins top & bottom.
+      ctx.fillStyle = PAL.stoneD; ctx.fillRect(cx - 1, y - 2, 2, 3); ctx.fillRect(cx - 1, y + e.h - 1, 2, 3);
+      // Big central purple eye with a cyan slit pupil.
+      ctx.fillStyle = PAL.purpleDk; ctx.fillRect(x + 4, y + 4, e.w - 8, e.h - 8);
+      ctx.fillStyle = core;         ctx.fillRect(x + 5, y + 5, e.w - 10, e.h - 10);
+      ctx.fillStyle = PAL.cyan;     ctx.fillRect(cx - 1, y + 5, 2, e.h - 10);
+      ctx.fillStyle = PAL.white;    ctx.fillRect(cx - 1, cy - 1, 2, 2);
+      // Hover thruster glow beneath — proof it floats.
+      ctx.fillStyle = PAL.purpleDk; ctx.fillRect(cx - 3, y + e.h + 2, 6, 2);
+      ctx.fillStyle = PAL.cyan;     ctx.fillRect(cx - 1, y + e.h + 4, 2, 1);
 
     } else if (e.behavior === 'battleram') {
       // ---- Teela on the Battle Ram ----
@@ -964,30 +997,72 @@ class GameEngine {
       ctx.fillStyle = PAL.havoc; ctx.fillRect(tx + 7, ty + 4, 6, 1);                       // gold crossguard
       ctx.fillStyle = PAL.brown; ctx.fillRect(tx + 9, ty + 5, 2, 3);                       // grip
 
-    } else {
-      // ---- Foot soldier: jungle guard (walker) or Grayskull elite ----
-      const isElite = e.behavior === 'elite';
+    } else if (e.behavior === 'elite') {
+      // ---- Grayskull Elite: a TALL, regal knight — plumed helm, broad pauldrons, spear ----
+      const body = hurt ? PAL.white : PAL.steel;
       const dir = e.vx < 0 ? -1 : 1;
-      const body = hurt ? PAL.white : (isElite ? PAL.steel : e.color);
-      const dark = isElite ? PAL.stoneD : PAL.jungleD;
-      const trim = isElite ? PAL.cyan : PAL.havoc;
-      // Legs.
-      ctx.fillStyle = dark;
-      ctx.fillRect(x + 2, y + e.h - 5, 4, 5);
-      ctx.fillRect(x + e.w - 6, y + e.h - 5, 4, 5);
-      // Torso + chest plate + center trim.
-      ctx.fillStyle = body; ctx.fillRect(x + 1, y + 5, e.w - 2, e.h - 9);
-      ctx.fillStyle = dark; ctx.fillRect(x + 2, y + 7, e.w - 4, 3);
-      ctx.fillStyle = trim; ctx.fillRect(x + e.w / 2 - 1, y + 6, 2, e.h - 12);
-      // Helmet + visor slit + glowing eyes.
-      ctx.fillStyle = body; ctx.fillRect(x + 3, y, e.w - 6, 6);
-      ctx.fillStyle = PAL.black; ctx.fillRect(x + 3, y + 2, e.w - 6, 2);
-      ctx.fillStyle = isElite ? PAL.cyan : PAL.blood;
-      ctx.fillRect(x + e.w / 2 - 3, y + 2, 1, 1); ctx.fillRect(x + e.w / 2 + 2, y + 2, 1, 1);
-      if (isElite) { ctx.fillStyle = PAL.blood; ctx.fillRect(x + e.w / 2 - 1, y - 3, 2, 3); } // crest
-      // Weapon arm toward facing.
+      // Disciplined armored legs.
       ctx.fillStyle = PAL.stoneD;
-      ctx.fillRect(dir < 0 ? x - 3 : x + e.w - 1, y + 7, 4, 2);
+      ctx.fillRect(x + 4, y + e.h - 6, 4, 6); ctx.fillRect(x + e.w - 8, y + e.h - 6, 4, 6);
+      ctx.fillStyle = PAL.black;
+      ctx.fillRect(x + 3, y + e.h - 2, 5, 2); ctx.fillRect(x + e.w - 8, y + e.h - 2, 5, 2);
+      // Cape draped behind the body.
+      ctx.fillStyle = PAL.cyanDk; ctx.fillRect(x + 2, y + 7, e.w - 4, e.h - 11);
+      // Tall cuirass torso with a lit/shaded edge and a cyan spine trim.
+      ctx.fillStyle = body;      ctx.fillRect(x + 4, y + 8, e.w - 8, e.h - 13);
+      ctx.fillStyle = PAL.gray;  ctx.fillRect(x + 4, y + 8, 1, e.h - 13);
+      ctx.fillStyle = PAL.stone; ctx.fillRect(x + e.w - 5, y + 8, 1, e.h - 13);
+      ctx.fillStyle = PAL.cyan;  ctx.fillRect(x + e.w / 2 - 1, y + 9, 2, e.h - 16);
+      ctx.fillStyle = PAL.stoneD; ctx.fillRect(x + 5, y + 14, e.w - 10, 2); // belt
+      // Broad pauldrons — wider than the torso, marking his rank.
+      ctx.fillStyle = body;
+      ctx.fillRect(x + 1, y + 7, 5, 4); ctx.fillRect(x + e.w - 6, y + 7, 5, 4);
+      ctx.fillStyle = PAL.gray;
+      ctx.fillRect(x + 1, y + 7, 5, 1); ctx.fillRect(x + e.w - 6, y + 7, 5, 1);
+      ctx.fillStyle = PAL.cyanDk;
+      ctx.fillRect(x + 1, y + 10, 5, 1); ctx.fillRect(x + e.w - 6, y + 10, 5, 1);
+      // Helmeted head + visor + glowing cyan eyes.
+      ctx.fillStyle = body;      ctx.fillRect(x + 6, y + 2, 6, 6);
+      ctx.fillStyle = PAL.gray;  ctx.fillRect(x + 6, y + 2, 6, 1);
+      ctx.fillStyle = PAL.black; ctx.fillRect(x + 6, y + 4, 6, 2);
+      ctx.fillStyle = PAL.cyan;  ctx.fillRect(x + 6, y + 4, 1, 1); ctx.fillRect(x + 11, y + 4, 1, 1);
+      // Tall plume crest rising above the helm.
+      ctx.fillStyle = PAL.blood;   ctx.fillRect(x + e.w / 2 - 1, y - 4, 2, 6);
+      ctx.fillStyle = PAL.bloodDk; ctx.fillRect(x + e.w / 2 - 1, y - 4, 2, 2);
+      // Vertical spear on the facing side, taller than he is.
+      const sx = dir < 0 ? x - 2 : x + e.w;
+      ctx.fillStyle = PAL.brown; ctx.fillRect(sx, y - 6, 2, e.h + 4);
+      ctx.fillStyle = PAL.gray;  ctx.fillRect(sx - 1, y - 10, 4, 5);
+      ctx.fillStyle = PAL.cyan;  ctx.fillRect(sx, y - 11, 2, 2);
+
+    } else {
+      // ---- Grunt: a hunched, scrappy foot brute with a raised club ----
+      const body = hurt ? PAL.white : e.color;         // blood (jungle) or toxic (cavern)
+      const dir = e.vx < 0 ? -1 : 1;
+      // Wide, bent brutish stance.
+      ctx.fillStyle = PAL.jungleD;
+      ctx.fillRect(x + 2, y + e.h - 6, 4, 6); ctx.fillRect(x + e.w - 6, y + e.h - 6, 4, 6);
+      ctx.fillStyle = PAL.black;
+      ctx.fillRect(x + 1, y + e.h - 2, 5, 2); ctx.fillRect(x + e.w - 6, y + e.h - 2, 5, 2);
+      // Slouched torso — a shadowed hunch on the back side.
+      ctx.fillStyle = body;      ctx.fillRect(x + 1, y + 7, e.w - 2, e.h - 11);
+      ctx.fillStyle = PAL.clayDk; ctx.fillRect(x + 1, y + 7, 3, e.h - 11);      // hunched back
+      ctx.fillRect(x + 3, y + 11, e.w - 5, 2);                                  // belt
+      // Slab shoulders hunkered up around the sunken head.
+      ctx.fillStyle = body;
+      ctx.fillRect(x, y + 5, 6, 5); ctx.fillRect(x + e.w - 6, y + 5, 6, 5);
+      // Small head sunk low between the shoulders.
+      ctx.fillStyle = PAL.clay;  ctx.fillRect(x + 5, y + 3, 6, 6);
+      ctx.fillStyle = PAL.black; ctx.fillRect(x + 5, y + 5, 6, 2);
+      ctx.fillStyle = PAL.blood; ctx.fillRect(x + 5, y + 5, 1, 1); ctx.fillRect(x + 10, y + 5, 1, 1); // eyes
+      // Crude club raised on the facing side, extends above the hitbox.
+      const cxL = dir < 0;
+      ctx.fillStyle = PAL.clayDk;
+      ctx.fillRect(cxL ? x - 2 : x + e.w - 1, y - 1, 3, 7);                      // handle + fist
+      ctx.fillStyle = PAL.stoneD;
+      ctx.fillRect(cxL ? x - 4 : x + e.w - 3, y - 6, 7, 5);                      // club head
+      ctx.fillStyle = PAL.gray;
+      ctx.fillRect(cxL ? x - 4 : x + e.w - 3, y - 6, 7, 1);                      // highlight
     }
 
     // No floating HP pip on normal enemies — the rabble's remaining life is

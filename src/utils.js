@@ -71,46 +71,55 @@ function drawSkeletor(ctx, sx, sy, w, h, facing, weapon, aim, invuln) {
   const R = (x, y, ww, hh, c) => { ctx.fillStyle = c; ctx.fillRect(sx + x, sy + y, ww, hh); };
   const midX = sx + w / 2;
 
-  // ---- Purple robe body (with shading + a central cloak fold) ----
-  R(1, 11, 12, 11, PAL.purple);
-  R(1, 11, 3, 11, PAL.purpleDk);      // left-side shadow
-  R(6, 12, 2, 10, PAL.purpleDk);      // fold crease
-  R(11, 11, 2, 11, PAL.purpleDk);     // right-side shadow
-  // Lit-side highlight streak + top-shoulder sheen (light from the facing side).
-  R(facing < 0 ? 3 : 8, 12, 2, 9, PAL.purpleHi);
-  R(4, 11, 6, 1, PAL.purpleHi);
-  // Bony hands peeking from the robe.
-  R(0, 13, 2, 3, PAL.bone);
-  R(12, 13, 2, 3, PAL.bone);
+  // ---- Blue cowl: a pointed crown framing the face, draping to the shoulders ----
+  R(6, 0, 2, 2, PAL.hoodDk);          // peak tip
+  R(5, 1, 4, 1, PAL.hoodDk);
+  R(3, 2, 8, 2, PAL.hoodDk);          // upper dome (dark)
+  R(2, 3, 10, 3, PAL.hood);           // cowl brow
+  R(2, 3, 10, 1, PAL.hoodHi);         // top-lit cowl gleam
+  R(1, 5, 2, 6, PAL.hood);            // left cheek frame
+  R(11, 5, 2, 6, PAL.hood);           // right cheek frame
+  R(1, 5, 1, 6, PAL.hoodDk);          // left frame shadow
+  R(12, 5, 1, 6, PAL.hoodHi);         // right frame gleam
+  R(0, 11, 14, 3, PAL.hood);          // shoulder drape
+  R(0, 11, 14, 1, PAL.hoodHi);        // collar top gleam
+  R(0, 13, 14, 1, PAL.hoodDk);        // collar trim
 
-  // ---- Blue hood/cowl framing the face ----
-  R(5, 0, 4, 2, PAL.hoodDk);          // pointed crown
-  R(1, 1, 12, 4, PAL.hoodDk);         // hood top (dark)
-  R(0, 3, 14, 8, PAL.hood);           // hood sides
-  R(1, 3, 12, 1, PAL.hoodHi);         // top-lit cowl gleam
-  R(0, 10, 14, 3, PAL.hood);          // shoulders / collar drape
-  R(0, 12, 14, 1, PAL.hoodDk);        // collar trim
-
-  // ---- Skull face inset in the hood ----
-  R(3, 3, 8, 8, PAL.bone);
-  R(3, 3, 2, 8, PAL.boneSh);          // left cheek shadow
-  R(3, 3, 8, 1, PAL.boneSh);          // brow ridge
-  R(9, 4, 1, 6, PAL.boneHi);          // lit cheekbone highlight
-  R(6, 4, 3, 1, PAL.boneHi);          // brow sheen
+  // ---- Skull face inset in the cowl (warm bone, lit from the right) ----
+  R(3, 4, 8, 7, PAL.skull);
+  R(3, 4, 2, 7, PAL.skullSh);         // left cheek shadow
+  R(3, 4, 8, 1, PAL.skullSh);         // brow ridge
+  R(9, 5, 1, 5, PAL.skullHi);         // lit cheekbone highlight
+  R(6, 4, 3, 1, PAL.skullHi);         // brow sheen
   // Hollow eye sockets with a burning ember glow.
-  R(4, 5, 2, 2, PAL.black);
-  R(8, 5, 2, 2, PAL.black);
-  R(5, 5, 1, 2, PAL.havoc);           // glowing inner slit
-  R(8, 5, 1, 2, PAL.havoc);
-  R(5, 6, 1, 1, PAL.ember);           // hotter ember core
-  R(8, 6, 1, 1, PAL.ember);
+  R(4, 6, 2, 2, PAL.black);
+  R(8, 6, 2, 2, PAL.black);
+  R(5, 6, 1, 2, PAL.havoc);           // glowing inner slit
+  R(8, 6, 1, 2, PAL.havoc);
+  R(5, 7, 1, 1, PAL.ember);           // hotter ember core
+  R(8, 7, 1, 1, PAL.ember);
   // Nasal cavity.
-  R(6, 7, 2, 2, PAL.black);
+  R(6, 8, 2, 2, PAL.black);
   // Grinning teeth.
-  R(4, 9, 6, 1, PAL.boneSh);
-  R(5, 9, 1, 2, PAL.black);
-  R(7, 9, 1, 2, PAL.black);
-  R(9, 9, 1, 2, PAL.black);
+  R(4, 10, 6, 1, PAL.skullSh);        // jaw line
+  R(5, 10, 1, 2, PAL.black);
+  R(7, 10, 1, 2, PAL.black);
+  R(9, 10, 1, 2, PAL.black);
+
+  // ---- Purple robe with shading, a central fold, and a gold gorget clasp ----
+  R(1, 13, 12, 9, PAL.purple);
+  R(1, 13, 3, 9, PAL.purpleDk);       // left-side shadow
+  R(6, 14, 2, 8, PAL.purpleDk);       // fold crease
+  R(10, 13, 3, 9, PAL.purpleDk);      // right-side shadow
+  R(facing < 0 ? 3 : 8, 14, 2, 7, PAL.purpleHi);  // lit-side highlight streak
+  R(5, 13, 4, 2, PAL.havoc);          // gold gorget clasp at the throat
+  R(6, 13, 2, 1, PAL.ember);          // clasp gleam
+  R(0, 20, 14, 2, PAL.purpleDk);      // flared hem shadow
+  R(2, 21, 3, 1, PAL.purple);         // hem folds
+  R(9, 21, 3, 1, PAL.purple);
+  // Bony hands peeking from the robe.
+  R(0, 15, 2, 3, PAL.bone);
+  R(12, 15, 2, 3, PAL.bone);
 
   // ---- Havoc Staff aimed along the fire vector ----
   const handX = midX + facing * 2, handY = sy + 14;
