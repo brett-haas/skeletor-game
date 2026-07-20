@@ -962,40 +962,66 @@ class GameEngine {
       ctx.fillStyle = PAL.cyan;     ctx.fillRect(cx - 1, y + e.h + 4, 2, 1);
 
     } else if (e.behavior === 'battleram') {
-      // ---- Teela on the Battle Ram ----
-      const steel = hurt ? PAL.white : PAL.steel;
-      // Vehicle chassis + panel lines.
-      ctx.fillStyle = steel; ctx.fillRect(x, y + 12, e.w, e.h - 12);
-      ctx.fillStyle = PAL.stoneD;
-      ctx.fillRect(x, y + 12, e.w, 2);
-      ctx.fillRect(x + e.w * 0.5, y + 15, 2, e.h - 17);
-      // Bronze ram head at the front with curled horns + battering spike.
-      ctx.fillStyle = PAL.hero; ctx.fillRect(x - 8, y + 14, 12, 12);
-      ctx.fillStyle = PAL.brown; ctx.fillRect(x - 8, y + 14, 12, 2);
-      ctx.fillStyle = PAL.black; ctx.fillRect(x - 5, y + 18, 2, 2); // eye
-      ctx.strokeStyle = PAL.bone; ctx.lineWidth = 2;
-      ctx.beginPath(); ctx.arc(x - 6, y + 15, 4, Math.PI * 0.7, Math.PI * 1.7); ctx.stroke();
-      ctx.beginPath(); ctx.arc(x + 2, y + 15, 4, Math.PI * 1.3, Math.PI * 2.3); ctx.stroke();
-      ctx.fillStyle = PAL.gray; ctx.fillRect(x - 12, y + 19, 5, 3);
-      // Wheels with hubs.
-      for (const wx of [x + 12, x + e.w - 12]) {
-        ctx.fillStyle = PAL.stoneD;
-        ctx.beginPath(); ctx.arc(wx, y + e.h, 6, 0, Math.PI * 2); ctx.fill();
-        ctx.fillStyle = PAL.gray;
-        ctx.fillRect(wx - 1, y + e.h - 5, 2, 10); ctx.fillRect(wx - 5, y + e.h - 1, 10, 2);
+      // ---- Teela on the Battle Ram: a low, wide slate-BLUE armored war-wagon on
+      // black knobby wheels, bronze horned ram-head prow leading the charge, Teela
+      // standing tall in the open cockpit. Authored facing LEFT (the canonical
+      // charge, dir -1); when charging RIGHT the whole rig is mirrored about the
+      // entity's centre so the prow always leads.
+      const dir = (e.data && e.data.dir > 0) ? 1 : -1;
+      const cx = x + e.w / 2;
+      const body   = hurt ? PAL.white : PAL.hood;    // blue hull
+      const bodyHi = hurt ? PAL.white : PAL.hoodHi;  // lit top strip
+      const bronze = hurt ? PAL.white : PAL.hero;    // ram head + Teela's bodice
+      const metal  = hurt ? PAL.white : PAL.gray;    // battering spike
+      const blade  = hurt ? PAL.white : PAL.steel;   // cobra-staff shaft
+
+      ctx.save();
+      if (dir > 0) { ctx.translate(cx * 2, 0); ctx.scale(-1, 1); } // mirror to face right
+
+      // Blue armored hull with lit crown, dark underbelly, rear engine cowl + cannon stub.
+      ctx.fillStyle = body;      ctx.fillRect(x + 4, y + 15, 38, 12);
+      ctx.fillStyle = bodyHi;    ctx.fillRect(x + 4, y + 15, 38, 2);
+      ctx.fillStyle = PAL.hoodDk; ctx.fillRect(x + 4, y + 24, 38, 3);
+      ctx.fillStyle = body;      ctx.fillRect(x + 38, y + 10, 6, 6);
+      ctx.fillStyle = bodyHi;    ctx.fillRect(x + 38, y + 10, 6, 2);
+      ctx.fillStyle = PAL.stoneD; ctx.fillRect(x + 41, y + 8, 2, 4);   // cannon barrel stub
+      // Black knobby off-road wheels with gray hubs.
+      for (const wx of [x + 13, x + 31]) {
+        const wy = y + 29;
+        ctx.fillStyle = PAL.black;
+        ctx.beginPath(); ctx.arc(wx, wy, 5, 0, Math.PI * 2); ctx.fill();
+        for (let a = 0; a < Math.PI * 2; a += Math.PI / 4) {          // tread cleats
+          ctx.fillRect(wx + Math.cos(a) * 5 - 1, wy + Math.sin(a) * 5 - 1, 2, 2);
+        }
+        ctx.fillStyle = PAL.gray; ctx.beginPath(); ctx.arc(wx, wy, 2, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = PAL.stoneD; ctx.fillRect(wx - 1, wy - 1, 2, 2);
       }
-      // ---- Teela riding atop ----
-      const tx = x + e.w / 2 - 4, ty = y - 8;
-      ctx.fillStyle = PAL.skinSh; ctx.fillRect(tx + 1, y + 6, 2, 6); ctx.fillRect(tx + 5, y + 6, 2, 6); // legs
-      ctx.fillStyle = hurt ? PAL.white : PAL.gray; ctx.fillRect(tx, ty + 6, 8, 8);   // armor
-      ctx.fillStyle = PAL.havoc; ctx.fillRect(tx, ty + 9, 8, 2);                     // gold belt
-      ctx.fillStyle = PAL.skin; ctx.fillRect(tx + 1, ty, 6, 6);                      // head
-      ctx.fillStyle = PAL.teela; ctx.fillRect(tx, ty - 2, 8, 3); ctx.fillRect(tx - 1, ty, 2, 6); // hair
-      // ---- Raised sword ----
-      ctx.fillStyle = hurt ? PAL.white : PAL.steel; ctx.fillRect(tx + 9, ty - 6, 2, 11);  // blade
-      ctx.fillStyle = PAL.bone;  ctx.fillRect(tx + 9, ty - 6, 1, 11);                      // edge highlight
-      ctx.fillStyle = PAL.havoc; ctx.fillRect(tx + 7, ty + 4, 6, 1);                       // gold crossguard
-      ctx.fillStyle = PAL.brown; ctx.fillRect(tx + 9, ty + 5, 2, 3);                       // grip
+      // Bronze ram-head prow (leading edge): head, jaw shadow, eye, battering spike, curled horns.
+      ctx.fillStyle = bronze;    ctx.fillRect(x - 8, y + 15, 12, 11);
+      ctx.fillStyle = PAL.brown; ctx.fillRect(x - 8, y + 23, 12, 3);
+      ctx.fillStyle = PAL.black; ctx.fillRect(x - 4, y + 18, 2, 2);
+      ctx.fillStyle = metal;     ctx.fillRect(x - 12, y + 20, 4, 4); ctx.fillRect(x - 13, y + 21, 2, 2);
+      ctx.strokeStyle = hurt ? PAL.white : PAL.bone; ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.arc(x - 5, y + 13, 4, Math.PI * 0.5, Math.PI * (300 / 180)); ctx.stroke();
+      ctx.beginPath(); ctx.arc(x + 1, y + 13, 4, Math.PI * (-30 / 180), Math.PI); ctx.stroke();
+      ctx.fillStyle = hurt ? PAL.white : PAL.bone;
+      ctx.fillRect(x - 6, y + 14, 2, 2); ctx.fillRect(x, y + 14, 2, 2);
+      // ---- Teela standing in the open cockpit (rear) ----
+      ctx.fillStyle = PAL.hoodDk;  ctx.fillRect(x + 28, y + 12, 12, 3);          // cockpit rim
+      ctx.fillStyle = PAL.skinSh;  ctx.fillRect(x + 31, y + 5, 2, 7); ctx.fillRect(x + 35, y + 5, 2, 7); // legs
+      ctx.fillStyle = bronze;      ctx.fillRect(x + 30, y - 3, 8, 9);            // snake bodice
+      ctx.fillStyle = PAL.havoc;   ctx.fillRect(x + 30, y + 4, 8, 2);            // gold belt
+      ctx.fillStyle = PAL.skin;    ctx.fillRect(x + 29, y - 1, 2, 6);            // near arm
+      ctx.fillStyle = PAL.skin;    ctx.fillRect(x + 31, y - 9, 6, 6);           // head
+      ctx.fillStyle = PAL.black;   ctx.fillRect(x + 32, y - 7, 1, 1);           // eye
+      ctx.fillStyle = PAL.teela;   ctx.fillRect(x + 30, y - 11, 8, 3);          // copper hair
+      ctx.fillRect(x + 29, y - 9, 2, 6); ctx.fillRect(x + 37, y - 10, 2, 3);
+      // Raised cobra staff.
+      ctx.fillStyle = blade;       ctx.fillRect(x + 39, y - 14, 2, 15);         // shaft
+      ctx.fillStyle = PAL.havoc;   ctx.fillRect(x + 38, y - 16, 4, 3);          // gold cobra head
+      ctx.fillStyle = PAL.blood;   ctx.fillRect(x + 41, y - 15, 2, 2);          // cobra eye
+
+      ctx.restore();
 
     } else if (e.behavior === 'elite') {
       // ---- Grayskull Elite: a TALL, regal knight — plumed helm, broad pauldrons, spear ----
