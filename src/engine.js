@@ -1253,14 +1253,55 @@ class GameEngine {
     g.addColorStop(0, PAL.sky2); g.addColorStop(1, PAL.black);
     ctx.fillStyle = g; ctx.fillRect(0, 0, VW, VH);
 
-    // Floating skull emblem.
+    // Floating head emblem — Skeletor's hooded skull in the style of the
+    // vintage '80s Mattel figure: a purple cowl framing a yellow bare-bone
+    // skull, hollow sockets lit by red eye-fire, and the signature
+    // gritted-teeth grimace. Authored on a 40x44 grid, symmetric about x=20.
     const cy = 70 + Math.sin(this.frame * 0.05) * 4;
-    ctx.fillStyle = PAL.bone;
-    ctx.fillRect(VW / 2 - 16, cy - 16, 32, 30);
-    ctx.fillStyle = PAL.blood;
-    ctx.fillRect(VW / 2 - 9, cy - 6, 5, 6); ctx.fillRect(VW / 2 + 4, cy - 6, 5, 6);
-    ctx.fillStyle = PAL.black;
-    ctx.fillRect(VW / 2 - 6, cy + 6, 3, 6); ctx.fillRect(VW / 2, cy + 6, 3, 6); ctx.fillRect(VW / 2 + 5, cy + 6, 3, 6);
+    // Snap the origin to whole pixels: a fractional offset would smear every
+    // block across two pixels and shimmer as the head bobs. Integer origin =
+    // crisp blocks that float in clean 1px steps.
+    const ex = Math.round(VW / 2 - 20), ey = Math.round(cy - 18);   // local (0,0) origin
+    const R = (x, y, w, h, c) => { ctx.fillStyle = c; ctx.fillRect(ex + x, ey + y, w, h); };
+
+    // ---- Purple hood cowl: a rounded arch draping to a floating point ----
+    R(17, 0, 6, 1, PAL.purple); R(15, 1, 10, 1, PAL.purple); R(13, 2, 14, 1, PAL.purple);
+    R(12, 3, 16, 1, PAL.purple); R(11, 4, 18, 1, PAL.purple); R(10, 5, 20, 1, PAL.purple);
+    R(10, 6, 20, 1, PAL.purple); R(9, 7, 22, 1, PAL.purple);
+    R(9, 9, 22, 22, PAL.purple);                                // side frames around the face
+    R(10, 31, 20, 1, PAL.purple); R(11, 32, 18, 1, PAL.purple); R(13, 33, 14, 1, PAL.purple);
+    R(15, 34, 10, 1, PAL.purple); R(17, 35, 6, 1, PAL.purple);  // cowl closes under the chin
+    R(9, 7, 1, 26, PAL.purpleDk); R(9, 7, 10, 1, PAL.purpleDk); // dark left/top rim
+    R(29, 9, 2, 23, PAL.purpleDk);                              // inner right fold shadow
+    R(30, 7, 1, 26, PAL.purpleHi); R(20, 0, 11, 1, PAL.purpleHi); // lit right rim + crown gleam
+    R(17, 35, 6, 1, PAL.purpleDk);                              // cowl bottom rim shadow
+
+    // ---- Yellow bare-bone skull inset in the cowl opening ----
+    R(14, 7, 12, 1, PAL.skull); R(13, 8, 14, 1, PAL.skull); R(13, 9, 14, 1, PAL.skull);
+    R(12, 10, 16, 1, PAL.skull); R(12, 11, 16, 1, PAL.skull); R(12, 12, 16, 1, PAL.skull);
+    R(12, 13, 16, 1, PAL.skull); R(13, 14, 14, 1, PAL.skull); R(13, 15, 14, 1, PAL.skull);
+    R(14, 16, 12, 1, PAL.skull);
+    R(12, 17, 16, 10, PAL.skull);                               // main face block
+    R(13, 27, 14, 1, PAL.skull); R(14, 28, 12, 1, PAL.skull); R(15, 29, 10, 1, PAL.skull); // jaw taper
+    R(12, 7, 1, 20, PAL.skullSh); R(13, 7, 14, 1, PAL.skullSh); // left edge + brow ridge
+    R(26, 10, 2, 17, PAL.skullHi); R(20, 25, 6, 1, PAL.skullHi); // lit cheekbone + chin gleam
+    R(13, 29, 13, 1, PAL.skullSh);                              // jaw shadow
+
+    // ---- Hollow eye sockets with an angry inner brow, lit by red eye-fire ----
+    R(13, 11, 5, 5, PAL.black); R(22, 11, 5, 5, PAL.black);
+    R(17, 11, 1, 2, PAL.skullSh); R(22, 11, 1, 2, PAL.skullSh); // inner-top brow points
+    R(13, 15, 5, 1, PAL.skullSh); R(22, 15, 5, 1, PAL.skullSh); // lower socket rim
+    R(15, 13, 2, 2, PAL.blood); R(23, 13, 2, 2, PAL.blood);     // burning red eyes
+
+    // ---- Nasal cavity ----
+    R(19, 17, 3, 2, PAL.black); R(20, 19, 1, 1, PAL.black);
+
+    // ---- Gritted-teeth grimace (the vintage toy's signature) ----
+    R(13, 21, 15, 6, PAL.skull);                                // teeth block
+    R(13, 24, 15, 1, PAL.black);                                // clench line between the rows
+    for (let tx = 14; tx < 28; tx += 2) { R(tx, 21, 1, 3, PAL.black); R(tx, 25, 1, 2, PAL.black); }
+    R(12, 21, 1, 6, PAL.black); R(28, 21, 1, 6, PAL.black);     // mouth corners
+    R(13, 20, 15, 1, PAL.skullSh);                              // upper-lip shadow
 
     this._text(ctx, "SKELETOR'S CONQUEST", VW / 2, 120, PAL.purple, 'center', 14);
     this._text(ctx, 'THE ROAD TO GRAYSKULL', VW / 2, 140, PAL.havoc, 'center', 10);
