@@ -337,40 +337,65 @@ class SorceressStratos {
       const x = s.x - cam.x, y = s.y - cam.y;
       const hurt = s.hurtT > 0;
       const flap = Math.sin(this.engine.frame * 0.4) * 7;
-      // Grey wings with red tips, flapping.
-      ctx.fillStyle = PAL.gray;
-      ctx.beginPath();
-      ctx.moveTo(x + 5, y + 8); ctx.lineTo(x - 18, y + 3 - flap);
-      ctx.lineTo(x - 14, y + 11 - flap); ctx.lineTo(x + 3, y + 15); ctx.closePath(); ctx.fill();
-      ctx.beginPath();
-      ctx.moveTo(x + s.w - 5, y + 8); ctx.lineTo(x + s.w + 18, y + 3 - flap);
-      ctx.lineTo(x + s.w + 14, y + 11 - flap); ctx.lineTo(x + s.w - 3, y + 15); ctx.closePath(); ctx.fill();
+      const hx = x + s.w / 2;
+      // Filmation Stratos: red membrane wings, fur ruff, blue jet-harness.
+      // Jet canisters flanking the torso (drawn first, behind the wings).
+      ctx.fillStyle = PAL.steel;
+      ctx.fillRect(x + 2, y + 5, 3, 9); ctx.fillRect(x + s.w - 5, y + 5, 3, 9);
+      ctx.fillStyle = PAL.bloodDk;                        // jet exhaust burn
+      ctx.fillRect(x + 2, y + 13, 3, 2); ctx.fillRect(x + s.w - 5, y + 13, 3, 2);
+      // Red membrane wings — fanned with a notched trailing edge, flapping.
       ctx.fillStyle = PAL.blood;
-      ctx.fillRect(x - 18, y + 2 - flap, 4, 3); ctx.fillRect(x + s.w + 14, y + 2 - flap, 4, 3);
-      // Shaded wing underside — the wings are already bright, so define them
-      // with a dark lower edge (a light edge had no contrast to work with).
-      ctx.strokeStyle = PAL.stoneD; ctx.lineWidth = 1;
       ctx.beginPath();
-      ctx.moveTo(x + 3, y + 14); ctx.lineTo(x - 14, y + 11 - flap);
-      ctx.moveTo(x + s.w - 3, y + 14); ctx.lineTo(x + s.w + 14, y + 11 - flap);
+      ctx.moveTo(x + 7, y + 5); ctx.lineTo(x - 17, y - 1 - flap);
+      ctx.lineTo(x - 16, y + 5 - flap); ctx.lineTo(x - 18, y + 8 - flap);
+      ctx.lineTo(x - 12, y + 10 - flap); ctx.lineTo(x - 14, y + 14 - flap);
+      ctx.lineTo(x - 7, y + 14 - flap); ctx.lineTo(x + 6, y + 16); ctx.closePath(); ctx.fill();
+      ctx.beginPath();
+      ctx.moveTo(x + s.w - 7, y + 5); ctx.lineTo(x + s.w + 17, y - 1 - flap);
+      ctx.lineTo(x + s.w + 16, y + 5 - flap); ctx.lineTo(x + s.w + 18, y + 8 - flap);
+      ctx.lineTo(x + s.w + 12, y + 10 - flap); ctx.lineTo(x + s.w + 14, y + 14 - flap);
+      ctx.lineTo(x + s.w + 7, y + 14 - flap); ctx.lineTo(x + s.w - 6, y + 16); ctx.closePath(); ctx.fill();
+      // Dark membrane struts + shaded lower edge for depth.
+      ctx.strokeStyle = PAL.bloodDk; ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(x + 7, y + 6); ctx.lineTo(x - 16, y + 2 - flap);
+      ctx.moveTo(x + 6, y + 16); ctx.lineTo(x - 7, y + 14 - flap);
+      ctx.moveTo(x + s.w - 7, y + 6); ctx.lineTo(x + s.w + 16, y + 2 - flap);
+      ctx.moveTo(x + s.w - 6, y + 16); ctx.lineTo(x + s.w + 7, y + 14 - flap);
       ctx.stroke();
-      // Blue torso + red harness X.
+      // Grey fur ruff bunched across the shoulders.
+      for (let i = x + 4; i < x + s.w - 3; i += 3) {
+        ctx.fillStyle = PAL.gray; ctx.fillRect(i, y + 2, 2, 3);
+        ctx.fillStyle = PAL.white; ctx.fillRect(i, y + 2, 2, 1);
+      }
+      // Blue jet-harness torso with red X-straps and gold buckle.
       ctx.fillStyle = hurt ? PAL.white : PAL.hood;
-      ctx.fillRect(x + 6, y + 4, s.w - 12, s.h - 4);
+      ctx.fillRect(x + 7, y + 5, s.w - 14, s.h - 5);
       ctx.fillStyle = hurt ? PAL.white : PAL.hoodHi;
-      ctx.fillRect(x + 6, y + 4, s.w - 12, 1);          // top-lit chest stripe
+      ctx.fillRect(x + 7, y + 5, s.w - 14, 1);            // top-lit chest stripe
+      ctx.fillStyle = PAL.hoodDk;
+      ctx.fillRect(x + 8, y + s.h - 2, s.w - 16, 1);      // bottom shade
       ctx.strokeStyle = PAL.blood; ctx.lineWidth = 2;
       ctx.beginPath();
-      ctx.moveTo(x + 8, y + 5); ctx.lineTo(x + s.w - 8, y + s.h - 2);
-      ctx.moveTo(x + s.w - 8, y + 5); ctx.lineTo(x + 8, y + s.h - 2); ctx.stroke();
-      // Head: aviator cap, goggles, beard.
-      const hx = x + s.w / 2;
+      ctx.moveTo(x + 9, y + 6); ctx.lineTo(x + s.w - 9, y + s.h - 3);
+      ctx.moveTo(x + s.w - 9, y + 6); ctx.lineTo(x + 9, y + s.h - 3); ctx.stroke();
+      ctx.fillStyle = PAL.havoc; ctx.fillRect(hx - 2, y + s.h / 2, 3, 3);
+      ctx.fillStyle = PAL.white; ctx.fillRect(hx - 2, y + s.h / 2, 3, 1);
+      // Red bracers / boots.
+      ctx.fillStyle = PAL.blood;
+      ctx.fillRect(x + 7, y + s.h - 2, 4, 3); ctx.fillRect(x + s.w - 11, y + s.h - 2, 4, 3);
+      // Head: aviator cap with crest fin, cyan goggles, grey moustache.
       ctx.fillStyle = PAL.skin; ctx.fillRect(hx - 4, y - 4, 8, 7);
+      ctx.fillStyle = PAL.skinSh; ctx.fillRect(hx - 4, y - 4, 1, 6); ctx.fillRect(hx + 3, y - 4, 1, 6);
       ctx.fillStyle = hurt ? PAL.white : PAL.hoodDk; ctx.fillRect(hx - 5, y - 6, 10, 4);
-      ctx.fillStyle = PAL.black; ctx.fillRect(hx - 4, y - 2, 8, 2);
+      ctx.fillStyle = hurt ? PAL.white : PAL.hoodHi; ctx.fillRect(hx - 5, y - 6, 10, 1);
+      ctx.fillStyle = PAL.gray; ctx.fillRect(hx - 1, y - 7, 2, 1);   // crest fin
+      ctx.fillStyle = PAL.black; ctx.fillRect(hx - 4, y - 2, 8, 2);  // goggle band
       ctx.fillStyle = PAL.cyan; ctx.fillRect(hx - 3, y - 2, 2, 2); ctx.fillRect(hx + 1, y - 2, 2, 2);
       ctx.fillStyle = PAL.white; ctx.fillRect(hx - 3, y - 2, 1, 1); ctx.fillRect(hx + 1, y - 2, 1, 1); // goggle glint
       ctx.fillStyle = PAL.gray; ctx.fillRect(hx - 3, y + 3, 6, 2);
+      ctx.fillStyle = PAL.white; ctx.fillRect(hx - 3, y + 3, 6, 1);
     }
 
     // ---- Sorceress: falcon-masked, robed ----
