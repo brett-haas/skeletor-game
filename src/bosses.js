@@ -398,41 +398,82 @@ class SorceressStratos {
       ctx.fillStyle = PAL.white; ctx.fillRect(hx - 3, y + 3, 6, 1);
     }
 
-    // ---- Sorceress: falcon-masked, robed ----
+    // ---- Sorceress: Filmation falcon-witch of Grayskull ----
+    // White feathered leotard, wide open wings that fade orange->blue at the
+    // tips, a white falcon headdress with upswept flares and a blue beak.
     const q = this.sorc;
     const x = q.x - cam.x, y = q.y - cam.y;
     const hurt = q.hurtT > 0;
     const warded = this.stratos.alive;
+    const cxw = x + q.w / 2;                 // horizontal centre
+    const flash = (c) => hurt ? PAL.white : c;  // solid-white hit cue
     // Contact shadow only when she hovers low to the ground.
     if (q.y + q.h > this.groundY - 30) {
       drawShadow(ctx, x + q.w / 2, this.groundY - cam.y, q.w);
     }
-    // Feathered cape.
-    ctx.fillStyle = PAL.steel;
+    // ---- Open feathered wings (behind the body): orange root, blue tips ----
+    ctx.fillStyle = flash(PAL.fur);
+    ctx.beginPath();                                     // left wing fan
+    ctx.moveTo(x + 2, y + 10); ctx.lineTo(x - 11, y + 12); ctx.lineTo(x - 8, y + 15);
+    ctx.lineTo(x - 11, y + 18); ctx.lineTo(x - 7, y + 21); ctx.lineTo(x - 10, y + 24);
+    ctx.lineTo(x - 3, y + 24); ctx.lineTo(x + 3, y + 19); ctx.closePath(); ctx.fill();
+    ctx.beginPath();                                     // right wing fan (mirror)
+    ctx.moveTo(x + q.w - 2, y + 10); ctx.lineTo(x + q.w + 11, y + 12); ctx.lineTo(x + q.w + 8, y + 15);
+    ctx.lineTo(x + q.w + 11, y + 18); ctx.lineTo(x + q.w + 7, y + 21); ctx.lineTo(x + q.w + 10, y + 24);
+    ctx.lineTo(x + q.w + 3, y + 24); ctx.lineTo(x + q.w - 3, y + 19); ctx.closePath(); ctx.fill();
+    ctx.fillStyle = flash(PAL.furHi);                    // top-lit leading edge
     ctx.beginPath();
-    ctx.moveTo(x - 1, y + 6); ctx.lineTo(x - 6, y + q.h);
-    ctx.lineTo(x + q.w + 6, y + q.h); ctx.lineTo(x + q.w + 1, y + 6); ctx.closePath(); ctx.fill();
-    // Teal robe, tapering to the hem.
-    ctx.fillStyle = hurt ? PAL.white : PAL.cyan;
+    ctx.moveTo(x + 2, y + 10); ctx.lineTo(x - 11, y + 12); ctx.lineTo(x - 6, y + 14); ctx.lineTo(x + 3, y + 13); ctx.closePath(); ctx.fill();
     ctx.beginPath();
-    ctx.moveTo(x + 2, y + 8); ctx.lineTo(x + q.w - 2, y + 8);
-    ctx.lineTo(x + q.w + 2, y + q.h); ctx.lineTo(x - 2, y + q.h); ctx.closePath(); ctx.fill();
-    if (!hurt) {                                             // hem deepens into shadow
-      ctx.fillStyle = PAL.hoodDk;
-      ctx.fillRect(x - 1, y + q.h - 4, q.w + 2, 4);
+    ctx.moveTo(x + q.w - 2, y + 10); ctx.lineTo(x + q.w + 11, y + 12); ctx.lineTo(x + q.w + 6, y + 14); ctx.lineTo(x + q.w - 3, y + 13); ctx.closePath(); ctx.fill();
+    ctx.fillStyle = flash(PAL.hood);                     // blue feather tips
+    const lTips = [[-11, 12, -8, 15], [-11, 18, -7, 21], [-10, 24, -3, 24]];
+    for (const [ax, ay, bx, by] of lTips) {
+      ctx.beginPath();
+      ctx.moveTo(x + ax, y + ay); ctx.lineTo(x + bx, y + by); ctx.lineTo(x + ax + 3, y + ay + 2); ctx.closePath(); ctx.fill();
     }
-    ctx.fillStyle = PAL.havoc; ctx.fillRect(x + q.w / 2 - 1, y + 12, 2, 5); // emblem
-    // Falcon headdress with wing flares + downturned beak.
-    ctx.fillStyle = PAL.white;
-    ctx.fillRect(x, y - 2, q.w, 8);
-    ctx.beginPath(); ctx.moveTo(x, y + 2); ctx.lineTo(x - 5, y - 5); ctx.lineTo(x + 2, y - 1); ctx.closePath(); ctx.fill();
-    ctx.beginPath(); ctx.moveTo(x + q.w, y + 2); ctx.lineTo(x + q.w + 5, y - 5); ctx.lineTo(x + q.w - 2, y - 1); ctx.closePath(); ctx.fill();
-    ctx.fillStyle = PAL.skin; ctx.fillRect(x + 3, y + 4, q.w - 6, 5); // face
-    ctx.fillStyle = PAL.purple; ctx.fillRect(x + 4, y + 5, 2, 1); ctx.fillRect(x + q.w - 6, y + 5, 2, 1);
-    ctx.fillStyle = PAL.havoc;  // beak
+    const rTips = [[11, 12, 8, 15], [11, 18, 7, 21], [10, 24, 3, 24]];
+    for (const [ax, ay, bx, by] of rTips) {
+      ctx.beginPath();
+      ctx.moveTo(x + q.w + ax, y + ay); ctx.lineTo(x + q.w + bx, y + by); ctx.lineTo(x + q.w + ax - 3, y + ay + 2); ctx.closePath(); ctx.fill();
+    }
+    // ---- White feathered leotard, tapering ----
+    ctx.fillStyle = flash(PAL.white);
     ctx.beginPath();
-    ctx.moveTo(x + q.w / 2 - 2, y + 5); ctx.lineTo(x + q.w / 2 + 2, y + 5); ctx.lineTo(x + q.w / 2, y + 10);
-    ctx.closePath(); ctx.fill();
+    ctx.moveTo(x + 3, y + 10); ctx.lineTo(x + q.w - 3, y + 10); ctx.lineTo(x + q.w - 4, y + q.h - 5);
+    ctx.lineTo(x + q.w - 6, y + q.h); ctx.lineTo(x + 6, y + q.h); ctx.lineTo(x + 4, y + q.h - 5); ctx.closePath(); ctx.fill();
+    if (!hurt) {                                          // subtle right-side shade + feathered hem
+      ctx.fillStyle = PAL.skinSh;
+      ctx.beginPath();
+      ctx.moveTo(x + q.w - 5, y + 11); ctx.lineTo(x + q.w - 3, y + 10); ctx.lineTo(x + q.w - 4, y + q.h - 5); ctx.lineTo(x + q.w - 5, y + q.h - 6); ctx.closePath(); ctx.fill();
+      ctx.fillStyle = PAL.gray;
+      for (const fx of [4, 7, 10]) {
+        ctx.beginPath();
+        ctx.moveTo(x + fx, y + q.h - 2); ctx.lineTo(x + fx + 2, y + q.h - 2); ctx.lineTo(x + fx + 1, y + q.h + 1); ctx.closePath(); ctx.fill();
+      }
+    }
+    ctx.fillStyle = flash(PAL.havoc); ctx.fillRect(cxw - 1, y + 16, 2, 4);  // falcon-crest emblem
+    if (!hurt) { ctx.fillStyle = PAL.white; ctx.fillRect(cxw - 1, y + 16, 2, 1); }
+    // ---- Face framed by the headdress ----
+    ctx.fillStyle = flash(PAL.skin); ctx.fillRect(x + 4, y + 3, q.w - 8, 6);
+    if (!hurt) {
+      ctx.fillStyle = PAL.skinSh; ctx.fillRect(x + 4, y + 3, 1, 6); ctx.fillRect(x + q.w - 5, y + 3, 1, 6);
+      ctx.fillStyle = PAL.purpleDk; ctx.fillRect(x + 5, y + 6, 1, 1); ctx.fillRect(x + q.w - 6, y + 6, 1, 1);  // eyes
+    }
+    // ---- White falcon headdress: upswept orange-accented flares + blue beak ----
+    ctx.fillStyle = flash(PAL.white); ctx.fillRect(x + 3, y - 2, q.w - 6, 5);  // crown dome
+    ctx.beginPath(); ctx.moveTo(x + 3, y - 2); ctx.lineTo(x - 2, y - 8); ctx.lineTo(x + 5, y - 3); ctx.closePath(); ctx.fill();
+    ctx.beginPath(); ctx.moveTo(x + q.w - 3, y - 2); ctx.lineTo(x + q.w + 2, y - 8); ctx.lineTo(x + q.w - 5, y - 3); ctx.closePath(); ctx.fill();
+    ctx.fillStyle = flash(PAL.fur);                       // orange flare accents + brow band
+    ctx.beginPath(); ctx.moveTo(x + 3, y - 2); ctx.lineTo(x - 2, y - 8); ctx.lineTo(x + 1, y - 4); ctx.closePath(); ctx.fill();
+    ctx.beginPath(); ctx.moveTo(x + q.w - 3, y - 2); ctx.lineTo(x + q.w + 2, y - 8); ctx.lineTo(x + q.w - 1, y - 4); ctx.closePath(); ctx.fill();
+    ctx.fillRect(x + 3, y + 2, q.w - 6, 1);
+    ctx.fillStyle = flash(PAL.hood);                      // blue beak over the brow
+    ctx.beginPath(); ctx.moveTo(cxw - 2, y); ctx.lineTo(cxw + 2, y); ctx.lineTo(cxw, y + 6); ctx.closePath(); ctx.fill();
+    if (!hurt) {
+      ctx.fillStyle = PAL.hoodHi;
+      ctx.beginPath(); ctx.moveTo(cxw - 2, y); ctx.lineTo(cxw - 1, y); ctx.lineTo(cxw, y + 6); ctx.closePath(); ctx.fill();
+    }
     if (warded) {
       const a = 0.4 + 0.2 * Math.sin(this.engine.frame * 0.2);
       const wcx = x + q.w / 2, wcy = y + q.h / 2;
