@@ -12,8 +12,8 @@
  * ========================================================================== */
 
 // ---- 8a. MAN-AT-ARMS (L1) ------------------------------------------------
-// A green-armored figure riding atop an armored laser war-machine: a horizontal
-// beam cannon + fragmentation grenades.
+// A grey-helmed figure in orange-and-green armor riding atop an armored laser
+// war-machine: a horizontal beam cannon + fragmentation grenades.
 // WEAKNESS: the exposed core reactor on the front of his machine.
 class ManAtArms {
   constructor(engine, x, groundY) {
@@ -153,13 +153,17 @@ class ManAtArms {
     // Legs + boots planted on the deck.
     R(mx - 6, 22, 4, 10, armC); R(mx + 2, 22, 4, 10, armC);
     R(mx - 6, 29, 4, 3, PAL.brown); R(mx + 2, 29, 4, 3, PAL.brown);
-    // Torso: green armor + gold chest plate + belt.
+    // Torso: green body-glove base, orange chest armor, brown trunks.
+    const orange = hurt ? PAL.white : PAL.ember;
+    const orangeHi = hurt ? PAL.white : PAL.emberHi;
     R(mx - 7, 4, 14, 19, armC);
     R(mx - 7, 4, 14, 1, hurt ? PAL.white : PAL.armorGnHi);
-    R(mx - 5, 7, 10, 6, hurt ? PAL.white : PAL.hero); R(mx - 5, 7, 10, 1, PAL.havoc); // chest
-    R(mx - 7, 18, 14, 2, PAL.havoc);                      // belt
-    // Shoulder pads + arms.
-    R(mx - 10, 4, 4, 6, armC); R(mx + 6, 4, 4, 6, armC);
+    R(mx - 6, 6, 12, 9, orange);                          // orange chest plate
+    R(mx - 6, 6, 12, 1, orangeHi); R(mx - 6, 10, 12, 1, orangeHi); // lit edge + seam
+    R(mx - 7, 17, 14, 3, PAL.brown);                      // brown trunks
+    // Orange pauldrons + green arms.
+    R(mx - 10, 4, 4, 5, orange); R(mx - 10, 4, 4, 1, orangeHi);
+    R(mx + 6, 4, 4, 5, orange); R(mx + 6, 4, 4, 1, orangeHi);
     ctx.strokeStyle = armC; ctx.lineWidth = 4;
     ctx.beginPath(); ctx.moveTo(x + mx - 8, y + 7); ctx.lineTo(x + mx - 11, y + 17); ctx.stroke(); // left arm on hip
     R(mx - 13, 15, 4, 4, hurt ? PAL.white : PAL.skin);    // left fist
@@ -170,15 +174,18 @@ class ManAtArms {
     ctx.beginPath(); ctx.moveTo(x + mx + 12, y + 1); ctx.lineTo(x + mx + 16, y - 11); ctx.stroke();
     ctx.fillStyle = PAL.gray; ctx.beginPath(); ctx.arc(x + mx + 17, y - 13, 3, 0, Math.PI * 2); ctx.fill();
     ctx.fillStyle = PAL.stoneD; ctx.fillRect(x + mx + 16, y - 17, 2, 2); ctx.fillRect(x + mx + 19, y - 12, 2, 2); // spikes
-    // Head: blue helmet, gold crest, tan face, mustache, glowing visor eyes.
-    R(mx - 5, -9, 10, 7, hurt ? PAL.white : PAL.hood);
-    R(mx - 5, -9, 10, 1, hurt ? PAL.white : PAL.hoodHi);
-    R(mx - 1, -12, 2, 3, PAL.havoc);                      // crest
-    R(mx - 6, -3, 2, 5, PAL.hood); R(mx + 4, -3, 2, 5, PAL.hood); // ear flaps
-    R(mx - 4, -3, 8, 5, hurt ? PAL.white : PAL.skin);     // face
-    R(mx - 4, -4, 8, 2, PAL.black);                       // visor slit
-    ctx.fillStyle = PAL.havoc; ctx.fillRect(x + mx - 2, y - 4, 1, 1); ctx.fillRect(x + mx + 1, y - 4, 1, 1);
-    R(mx - 4, 0, 8, 2, PAL.brown);                        // mustache
+    // Head: grey dome helmet, orange crest, open mustached face (Filmation).
+    const helm = hurt ? PAL.white : PAL.steel;
+    R(mx - 5, -8, 10, 6, helm);                           // dome body
+    R(mx - 4, -9, 8, 1, helm);                            // rounded crown
+    R(mx - 5, -8, 10, 1, hurt ? PAL.white : PAL.gray);    // helmet highlight
+    R(mx - 2, -11, 4, 2, orange); R(mx - 2, -11, 4, 1, orangeHi); // orange crest ridge
+    R(mx - 6, -2, 2, 4, helm); R(mx + 4, -2, 2, 4, helm); // grey ear guards
+    R(mx - 4, -2, 8, 6, hurt ? PAL.white : PAL.skin);     // open face
+    R(mx - 4, -2, 8, 1, hurt ? PAL.white : PAL.skinHi);
+    ctx.fillStyle = PAL.black;                            // eyes
+    ctx.fillRect(x + mx - 3, y - 1, 2, 1); ctx.fillRect(x + mx + 1, y - 1, 2, 1);
+    R(mx - 4, 2, 8, 2, PAL.brown);                        // mustache
     if (this.laserActive > 0) {
       const charging = this.laserActive >= this.laserLethal;
       ctx.strokeStyle = charging ? 'rgba(255,210,63,0.5)' : PAL.blood;
