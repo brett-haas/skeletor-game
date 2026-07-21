@@ -71,55 +71,72 @@ function drawSkeletor(ctx, sx, sy, w, h, facing, weapon, aim, invuln) {
   const R = (x, y, ww, hh, c) => { ctx.fillStyle = c; ctx.fillRect(sx + x, sy + y, ww, hh); };
   const midX = sx + w / 2;
 
-  // ---- Blue cowl: a pointed crown framing the face, draping to the shoulders ----
-  R(6, 0, 2, 2, PAL.hoodDk);          // peak tip
-  R(5, 1, 4, 1, PAL.hoodDk);
-  R(3, 2, 8, 2, PAL.hoodDk);          // upper dome (dark)
-  R(2, 3, 10, 3, PAL.hood);           // cowl brow
-  R(2, 3, 10, 1, PAL.hoodHi);         // top-lit cowl gleam
-  R(1, 5, 2, 6, PAL.hood);            // left cheek frame
-  R(11, 5, 2, 6, PAL.hood);           // right cheek frame
-  R(1, 5, 1, 6, PAL.hoodDk);          // left frame shadow
-  R(12, 5, 1, 6, PAL.hoodHi);         // right frame gleam
-  R(0, 11, 14, 3, PAL.hood);          // shoulder drape
-  R(0, 11, 14, 1, PAL.hoodHi);        // collar top gleam
-  R(0, 13, 14, 1, PAL.hoodDk);        // collar trim
+  // ---- Purple hood: a rounded dome framing the face, draping to the shoulders ----
+  R(5, 0, 4, 1, PAL.purple);          // rounded crown
+  R(4, 1, 6, 1, PAL.purple);
+  R(3, 2, 8, 1, PAL.purple);
+  R(2, 3, 10, 1, PAL.purple);         // brow band
+  R(2, 4, 2, 6, PAL.purple);          // left cheek frame
+  R(10, 4, 2, 6, PAL.purple);         // right cheek frame
+  R(0, 10, 14, 2, PAL.purple);        // shoulder drape
+  R(5, 0, 4, 1, PAL.purpleDk);        // crown top cap (dark)
+  R(4, 1, 2, 1, PAL.purpleDk);        // dome upper-left shadow
+  R(2, 3, 1, 7, PAL.purpleDk);        // left frame shadow
+  R(2, 10, 3, 2, PAL.purpleDk);       // drape left shadow
+  R(4, 1, 5, 1, PAL.purpleHi);        // top-lit dome gleam
+  R(11, 4, 1, 6, PAL.purpleHi);       // right frame gleam
+  R(0, 10, 14, 1, PAL.purpleHi);      // collar top gleam
+  R(0, 11, 14, 1, PAL.purpleDk);      // collar trim
 
-  // ---- Skull face inset in the cowl (warm bone, lit from the right) ----
-  R(3, 4, 8, 7, PAL.skull);
-  R(3, 4, 2, 7, PAL.skullSh);         // left cheek shadow
-  R(3, 4, 8, 1, PAL.skullSh);         // brow ridge
-  R(9, 5, 1, 5, PAL.skullHi);         // lit cheekbone highlight
-  R(6, 4, 3, 1, PAL.skullHi);         // brow sheen
-  // Hollow eye sockets with a burning ember glow.
-  R(4, 6, 2, 2, PAL.black);
-  R(8, 6, 2, 2, PAL.black);
-  R(5, 6, 1, 2, PAL.havoc);           // glowing inner slit
-  R(8, 6, 1, 2, PAL.havoc);
-  R(5, 7, 1, 1, PAL.ember);           // hotter ember core
-  R(8, 7, 1, 1, PAL.ember);
-  // Nasal cavity.
-  R(6, 8, 2, 2, PAL.black);
-  // Grinning teeth.
-  R(4, 10, 6, 1, PAL.skullSh);        // jaw line
-  R(5, 10, 1, 2, PAL.black);
-  R(7, 10, 1, 2, PAL.black);
-  R(9, 10, 1, 2, PAL.black);
+  // ---- Yellow bare-bone skull inset in the hood (lit from the right) ----
+  R(4, 4, 6, 6, PAL.skull);
+  R(4, 4, 1, 6, PAL.skullSh);         // left cheek shadow
+  R(4, 4, 6, 1, PAL.skullSh);         // brow ridge
+  R(8, 5, 1, 4, PAL.skullHi);         // lit cheekbone highlight
+  // Hollow eye sockets with an angry outer slant (dark — pure Filmation).
+  R(4, 5, 2, 2, PAL.black);
+  R(8, 5, 2, 2, PAL.black);
+  R(4, 5, 1, 1, PAL.skullSh);         // outer brow slant (left)
+  R(9, 5, 1, 1, PAL.skullSh);         // outer brow slant (right)
+  // Nasal cavity and a grinning row of teeth.
+  R(6, 7, 2, 1, PAL.black);
+  R(4, 8, 6, 1, PAL.skull);           // teeth band
+  R(5, 8, 1, 1, PAL.black);           // tooth gaps
+  R(7, 8, 1, 1, PAL.black);
+  R(9, 8, 1, 1, PAL.black);
+  R(4, 9, 6, 1, PAL.skullSh);         // jaw shadow
 
-  // ---- Purple robe with shading, a central fold, and a gold gorget clasp ----
-  R(1, 13, 12, 9, PAL.purple);
-  R(1, 13, 3, 9, PAL.purpleDk);       // left-side shadow
-  R(6, 14, 2, 8, PAL.purpleDk);       // fold crease
-  R(10, 13, 3, 9, PAL.purpleDk);      // right-side shadow
-  R(facing < 0 ? 3 : 8, 14, 2, 7, PAL.purpleHi);  // lit-side highlight streak
-  R(5, 13, 4, 2, PAL.havoc);          // gold gorget clasp at the throat
-  R(6, 13, 2, 1, PAL.ember);          // clasp gleam
-  R(0, 20, 14, 2, PAL.purpleDk);      // flared hem shadow
-  R(2, 21, 3, 1, PAL.purple);         // hem folds
-  R(9, 21, 3, 1, PAL.purple);
-  // Bony hands peeking from the robe.
-  R(0, 15, 2, 3, PAL.bone);
-  R(12, 15, 2, 3, PAL.bone);
+  // ---- Blue muscular torso with a gray armor breastplate ----
+  R(2, 12, 10, 4, PAL.demonBlue);     // bare blue chest / shoulders
+  R(4, 12, 6, 4, PAL.steel);          // gray breastplate
+  R(4, 12, 1, 4, PAL.steelDk);        // plate shadow
+  R(9, 12, 1, 4, PAL.gray);           // plate highlight
+  R(4, 12, 6, 1, PAL.gray);           // collar gleam
+  R(6, 13, 2, 2, PAL.steelDk);        // central rib groove
+
+  // ---- Blue arms with gray bracers ----
+  R(0, 12, 2, 5, PAL.demonBlue);      // left arm
+  R(12, 12, 2, 5, PAL.demonBlue);     // right arm
+  R(0, 12, 1, 5, facing < 0 ? PAL.demonBlueHi : PAL.demonBlueSh);   // lit/shade flips with facing
+  R(13, 12, 1, 5, facing < 0 ? PAL.demonBlueSh : PAL.demonBlueHi);
+  R(0, 15, 2, 2, PAL.steel);          // left bracer
+  R(12, 15, 2, 2, PAL.steel);         // right bracer
+
+  // ---- Purple loincloth with a central flap ----
+  R(4, 16, 6, 3, PAL.purple);
+  R(6, 16, 2, 3, PAL.purpleDk);       // central flap crease
+  R(facing < 0 ? 4 : 9, 16, 1, 3, PAL.purpleHi);  // lit-side highlight streak
+  R(facing < 0 ? 9 : 4, 16, 1, 3, PAL.purpleDk);  // shaded side
+
+  // ---- Blue legs and purple boots ----
+  R(4, 19, 2, 2, PAL.demonBlue);      // left thigh
+  R(8, 19, 2, 2, PAL.demonBlue);      // right thigh
+  R(4, 19, 1, 2, PAL.demonBlueSh);
+  R(9, 19, 1, 2, PAL.demonBlueHi);
+  R(3, 20, 3, 2, PAL.purple);         // left boot
+  R(8, 20, 3, 2, PAL.purple);         // right boot
+  R(3, 20, 1, 2, PAL.purpleDk);
+  R(10, 20, 1, 2, PAL.purpleHi);
 
   // ---- Havoc Staff aimed along the fire vector ----
   const handX = midX + facing * 2, handY = sy + 14;

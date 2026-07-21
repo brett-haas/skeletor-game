@@ -79,9 +79,12 @@ const PAL = {
   black:  '#05060a',
   bone:   '#e9e4d0',   // Skeletor's skull
   boneSh: '#b8b199',
-  skull:  '#e4dcae',   // Skeletor's face — warm bone, distinct from armour bone
-  skullSh:'#a9a074',   // skull cheek / brow / jaw shadow
-  skullHi:'#fbf6d0',   // skull lit cheekbone highlight
+  skull:  '#e2d16a',   // Skeletor's face — Filmation yellow bare-bone skull
+  skullSh:'#a89440',   // skull cheek / brow / jaw shadow
+  skullHi:'#f5ec9a',   // skull lit cheekbone highlight
+  demonBlue:  '#6f8fd4', // Skeletor's blue skin — arms, torso, legs (Filmation)
+  demonBlueSh:'#4a67a8', // blue-skin shadow side
+  demonBlueHi:'#96b2e8', // blue-skin lit side
   hood:   '#3a6ea5',   // his blue cowl
   hoodDk: '#26507d',
   purple: '#7d4bd6',
@@ -101,6 +104,7 @@ const PAL = {
   stone:  '#4a4a5a',
   stoneD: '#2b2b38',
   steel:  '#8a94a6',
+  steelDk:'#5c6472',   // Skeletor armor-plate shadow / rib groove
   white:  '#ffffff',
   cyan:   '#4bd6d6',
   hero:   '#f2c14e',   // He-Man tan/gold
