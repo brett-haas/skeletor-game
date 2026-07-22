@@ -431,6 +431,32 @@ test('stage boss returns at full HP after the player dies and respawns', () => {
   assert.equal(g.boss.hp, g.boss.maxHp, 'the new boss starts at full HP');
 });
 
+test('respawn sweeps the field of leftover boss/subboss projectiles', () => {
+  const g = createGame();
+  g.loadLevel(0);
+
+  // Reach the boss gate so a boss/subboss barrage can fill the field.
+  g.player.x = g.level.bossX;
+  g.step(1);
+  assert.ok(g.boss, 'stage boss spawned at the gate');
+
+  // Simulate a live barrage airborne at the moment of death.
+  g.engine.enemyShots.push({ x: g.player.x, y: g.player.y, vx: -3, vy: 0, dead: false });
+  g.engine.enemyShots.push({ x: g.player.x + 20, y: g.player.y, vx: -3, vy: 0, dead: false });
+  g.engine.shots.push({ x: g.player.x, y: g.player.y, vx: 3, vy: 0, dead: false });
+  assert.ok(g.engine.enemyShots.length > 0, 'barrage is airborne pre-death');
+
+  // Skeletor falls (clear i-frames so the kill lands), then respawns.
+  g.player.invuln = 0;
+  g.engine.killPlayer();
+  g.step(50); // respawn timer is 45 frames
+
+  assert.equal(g.engine.enemyShots.length, 0,
+    'no leftover boss/subboss projectiles survive the respawn');
+  assert.equal(g.engine.shots.length, 0,
+    'no leftover player projectiles survive the respawn');
+});
+
 test('living mid-boss re-spawns fresh after a respawn', () => {
   const g = createGame();
   g.loadLevel(0);

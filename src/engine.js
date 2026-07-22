@@ -191,6 +191,11 @@ class GameEngine {
     // instance is dropped and re-spawned at full health when the player returns.
     this.level.resetBossFight();
     this.boss = null;
+    // Sweep the field clear of in-flight projectiles. A boss/subboss barrage
+    // airborne at the moment of death would otherwise linger and cut the
+    // freshly respawned player down before the mercy i-frames could help.
+    this.enemyShots.length = 0;
+    this.shots.length = 0;
     p.dead = false;
     p.weapon = WEAPON.DEFAULT;   // one-hit death = weapon loss
     p.barrierTime = 0;
