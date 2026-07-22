@@ -22,6 +22,7 @@ Requires Node 18+ (developed on Node 24).
 | `physics.test.js` | Jump/gravity, pit death, a **regression guard** that every pit is jumpable or bridged, and Level 3's climb (collapsing ledges, fatal falls) + hallway-respawn placement |
 | `input.test.js` | Aim vectoring: diagonal normalization (~0.7071) and the idle-facing divide-by-zero guard |
 | `weapons.test.js` | Each weapon's shot shape, cooldown, BARRIER i-frames, FLAME DPS + range falloff |
+| `projectiles.test.js` | `Projectile` entity physics: homing steering (`homingKeepSpeed` holds constant speed through a hard turn, default homing bleeds speed toward zero) and `grow` radius-swell (Light-Ring laser ring) |
 | `combat.test.js` | Life-loss rules: exactly one life per death, the dead/invulnerable guard, enemy contact death |
 | `scoring.test.js` | Score awards (+100 kill, +250 pickup, +5000 level clear) and the `startGame` reset |
 | `powerups.test.js` | Power-up lifecycle: drop-on-death, fall-and-settle, weapon grant on pickup, timeout expiry |

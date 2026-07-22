@@ -61,3 +61,24 @@ test('homingKeepSpeed is off by default — a plain homing bolt still decays', (
   const b = new g.classes.Projectile(0, 0, 2, 0, { homing: 0.03 });
   assert.equal(b.homingKeepSpeed, false, 'the flag is opt-in, never on by accident');
 });
+
+test('grow swells the radius by a fixed step each frame (the Light-Ring laser ring)', () => {
+  const g = createGame();
+  g.loadLevel(1);
+  // The Light-Ring laser is a slow, ever-widening ring: its hitbox must expand
+  // by exactly `grow` per update so the swelling ring keeps eating enemies.
+  const b = new g.classes.Projectile(0, 0, 0, 0, { r: 4, grow: 1.5, life: 999 });
+  assert.equal(b.r, 4, 'starts at its launch radius');
+  b.update(g.engine);
+  assert.ok(Math.abs(b.r - 5.5) < 1e-6, `radius grows by grow each frame (got ${b.r})`);
+  b.update(g.engine);
+  assert.ok(Math.abs(b.r - 7.0) < 1e-6, `and keeps growing linearly (got ${b.r})`);
+});
+
+test('grow defaults to 0 — an ordinary shot never swells', () => {
+  const g = createGame();
+  g.loadLevel(1);
+  const b = new g.classes.Projectile(0, 0, 3, 0, { r: 3, life: 999 });
+  b.update(g.engine);
+  assert.equal(b.r, 3, 'a plain projectile holds its radius');
+});
