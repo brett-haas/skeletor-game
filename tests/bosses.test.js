@@ -62,6 +62,59 @@ test('Man-At-Arms: arena lock keeps the player at his front — no slipping behi
   assert.ok(p.x + p.w >= wall - 1, 'player advances right up to the wall');
 });
 
+test('Man-At-Arms laser is a FAIR jump: the whole survivable window is bracketed', () => {
+  // Guards the "jump the beam" contract AND the honesty of its telegraph, across
+  // the FULL survivable window (not just its roomy early edge). The red cue locks
+  // when laserActive <= laserSafeCue; the beam is lethal when laserActive <
+  // laserLethal. In the real engine we leap at a chosen frame and check survival:
+  //   - standing (never jump)          -> dies (and the beam truly fired)
+  //   - earliest cue frame (safeCue)   -> survives (generous clearance)
+  //   - latest survivable (lethal+1)   -> survives (the razor-thin far edge)
+  //   - one frame later (lethal)       -> dies (proves the window's late edge is real)
+  // Bracketing both edges means a future tuning change that narrows the window
+  // from EITHER side fails this test loudly, rather than sliding by on the early
+  // edge's slack.
+  const runBeam = (jumpAt) => {
+    // jumpAt: (boss) => laserActive value to leap at, or null to never jump.
+    const g = createGame();
+    g.loadLevel(0);
+    const p = g.player;
+    p.x = g.level.bossX;                    // trip the boss gate
+    g.step(1);
+    const boss = g.boss;
+    assert.ok(boss instanceof g.classes.ManAtArms, 'Man-At-Arms spawned at the gate');
+    const target = jumpAt === null ? null : jumpAt(boss);
+    let firedLethal = false;
+    for (let f = 0; f < 700 && !p.dead; f++) {
+      boss.grenadeT = 999;                 // isolate the beam: suppress grenades
+      p.x = boss.x - 40;                   // pin in front, within the beam's reach
+      // Leap at the chosen charge frame (a full jump: a synthetic tap is never
+      // rise-cut). Grounded between cycles, so it re-arms for every beam.
+      if (target !== null && p.onGround && boss.laserActive === target) g.tap('KeyK');
+      g.step(1);
+      // Sample AFTER the step that applied the gate, mirroring the engine's exact
+      // lethal condition (laserActive < laserLethal). Checked post-step because a
+      // standing player dies on the very frame the first lethal value appears, so a
+      // top-of-loop read would exit before ever observing it.
+      if (boss.laserActive > 0 && boss.laserActive < boss.laserLethal) firedLethal = true;
+    }
+    return { dead: p.dead, firedLethal };
+  };
+
+  const stand = runBeam(null);
+  assert.ok(stand.firedLethal, 'the beam reached its lethal phase (sanity: it actually fired)');
+  assert.equal(stand.dead, true, 'a player who never jumps is killed by the beam');
+
+  assert.equal(runBeam((b) => b.laserSafeCue).dead, false,
+    'leaping at the earliest cue frame (red locks) clears the beam');
+
+  assert.equal(runBeam((b) => b.laserLethal + 1).dead, false,
+    'leaping at the LATEST survivable frame still clears the beam (far edge pinned)');
+
+  assert.equal(runBeam((b) => b.laserLethal).dead, true,
+    'leaping one frame past the window is fatal (the late edge is real)');
+});
+
 test('arena lock is opt-in: only Man-At-Arms exposes a numeric wallX', () => {
   const g = createGame();
   // The clamp keys off `typeof boss.wallX === 'number'`, so the other bosses

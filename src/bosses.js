@@ -30,12 +30,24 @@ class ManAtArms {
     // Laser is lethal only for its final `laserLethal` frames; the frames
     // before that are a harmless charge telegraph. What matters for fairness is
     // not raw airtime but CLEARANCE time — how long a full jump keeps the
-    // player's feet above the beam (~16px off the ground). That window is only
-    // ~32f (feet clear from ~frame 2 to ~frame 34 of the arc), so a 30f lethal
-    // span left a brutal ~2f timing margin. A 22f kill window (with a longer
-    // 38f telegraph) gives ~10f of slack: still must be jumped, no longer needs
-    // frame-perfect reflexes.
-    this.laserLethal = 22;
+    // player's feet above the beam (~16px off the ground). A full jump clears the
+    // beam band for ~arc-frames 3..34. Because the whole lethal span must fit
+    // inside that clearance, the EARLIEST survivable jump is fixed at laserActive
+    // ~33 regardless of the kill-window length (jump sooner and you descend back
+    // into the beam's tail); shortening the kill window only lets you jump LATER.
+    // A 10f kill window puts lethal-start at laserActive 9, giving ~24f (~0.4s)
+    // of lead from the "jump now" cue (laserSafeCue 33) to first blood, and a wide
+    // ~23f survivable-jump window (laserActive 11..33) so the player can react late
+    // and still clear it — while a standing player always dies (the jump is still
+    // mandatory).
+    this.laserLethal = 10;
+    // Full active span (charge telegraph + lethal window). One source of truth so
+    // the render's charge-glow can gauge how close the beam is to firing.
+    this.laserDur = 60;
+    // Earliest laserActive value at which a full jump survives the whole lethal
+    // span (see above). The muzzle glow locks full blood-red here — so "red = jump"
+    // is honest: the red is lit exactly across the window where a jump clears.
+    this.laserSafeCue = 33;
     this.hurtT = 0;
     // Beam height offset from this.y. Tuned so the horizontal laser strikes a
     // STANDING player's torso (must be jumped, not simply stood under). Shared
@@ -64,7 +76,7 @@ class ManAtArms {
 
     // Center laser: telegraph then fire a lethal horizontal beam.
     if (--this.laserT <= 0) {
-      this.laserActive = 60;
+      this.laserActive = this.laserDur;
       this.laserT = 200;
     }
     if (this.laserActive > 0) {
@@ -188,9 +200,62 @@ class ManAtArms {
     R(mx - 4, 2, 8, 2, PAL.brown);                        // mustache
     if (this.laserActive > 0) {
       const charging = this.laserActive >= this.laserLethal;
-      ctx.strokeStyle = charging ? 'rgba(255,210,63,0.5)' : PAL.blood;
-      ctx.lineWidth = charging ? 2 : 5;
+      // Charge fraction (0->1) drives the muzzle glow's SWELL (size + brightness).
+      const k = charging
+        ? Math.min(1, Math.max(0, (this.laserDur - this.laserActive) / (this.laserDur - this.laserLethal)))
+        : 1;
+      // Danger heat, keyed to the ACTUAL dodge mechanic (not raw charge %): warm
+      // yellow warns for ~16 frames (a longer "get ready" so the red never ambushes),
+      // then LOCKS full blood-red the instant the safe-jump window opens (laserActive
+      // <= laserSafeCue) and stays red across it. So the red flush means precisely
+      // "a jump started now survives" — honest, with ~22f of lead before the beam
+      // turns lethal.
+      const heat = charging
+        ? Math.min(1, Math.max(0, (this.laserSafeCue + 16 - this.laserActive) / 16))
+        : 1;
+      // Yellow (255,210,63) -> red (255,40,30) as heat climbs. SHARED by both the
+      // lane telegraph line (WHERE the beam strikes) and the muzzle glow (WHEN it
+      // fires) so the two cues flush in lockstep and read as one signal.
+      const g = Math.round(210 - 170 * heat), bch = Math.round(63 - 33 * heat);
+
+      // Beam-path telegraph / lethal beam, both drawn along the same lane line.
+      // Charging: a thin line warming yellow->red with `heat`, showing WHERE the
+      // beam will strike. Firing: the thick lethal beam (PAL.blood) — SNAPPED to a
+      // hot white CRACK on the killing frame that fades over ~4 frames, so the
+      // instant it turns deadly reads as a distinct flash, not just a fatter red.
+      ctx.strokeStyle = charging ? `rgba(255,${g},${bch},${0.4 + 0.35 * heat})` : PAL.blood;
+      ctx.lineWidth = charging ? 2 + heat : 5;
       ctx.beginPath(); ctx.moveTo(x - 18, y + b); ctx.lineTo(-cam.x, y + b); ctx.stroke();
+      if (!charging) {
+        const snap = Math.max(0, 1 - (this.laserLethal - 1 - this.laserActive) / 4);
+        if (snap > 0) {
+          ctx.save();
+          ctx.globalCompositeOperation = 'lighter';
+          ctx.strokeStyle = `rgba(255,255,255,${snap})`;
+          ctx.lineWidth = 5 + 4 * snap;
+          ctx.beginPath(); ctx.moveTo(x - 18, y + b); ctx.lineTo(-cam.x, y + b); ctx.stroke();
+          ctx.restore();
+        }
+      }
+
+      // Muzzle charge-glow: a small halo hugging the cannon mouth that SWELLS as the
+      // beam nears firing (via `k`) and flushes yellow->red (via `heat`), flaring to
+      // full on the lethal frames. Additive so it brightens, not muddies — same
+      // radial-halo idiom as the core generator below.
+      const flicker = charging ? 0.85 + 0.15 * Math.sin(this.t * 0.5) : 1;
+      const gr = (4 + 10 * k) * flicker;
+      const ga = (0.25 + 0.5 * k) * flicker;
+      const cg = Math.round(240 - 90 * heat), cb = Math.round(180 - 120 * heat);
+      const mgx = x - 16, mgy = y + b;
+      ctx.save();
+      ctx.globalCompositeOperation = 'lighter';
+      const mg = ctx.createRadialGradient(mgx, mgy, 0.5, mgx, mgy, gr);
+      mg.addColorStop(0, `rgba(255,${cg},${cb},${ga})`);
+      mg.addColorStop(0.5, `rgba(255,${g},${bch},${ga * 0.55})`);
+      mg.addColorStop(1, 'rgba(255,80,30,0)');
+      ctx.fillStyle = mg;
+      ctx.beginPath(); ctx.arc(mgx, mgy, gr, 0, Math.PI * 2); ctx.fill();
+      ctx.restore();
     }
 
     // ---- Exposed CORE GENERATOR (the weak point) — pulsing when alive ----
