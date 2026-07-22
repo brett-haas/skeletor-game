@@ -33,6 +33,7 @@ class GameEngine {
     this.lives = 3;
     this.score = 0;
     this.levelIndex = 0;
+    this.powerupsDisabled = false;   // hidden 'P' toggle — pure-combat run
 
     // Per-level actor pools.
     this._resetPools();
@@ -241,6 +242,16 @@ class GameEngine {
 
     // Global: mute toggle (M) — for the minion who craves SILENCE.
     if (inp.tapped('KeyM')) SFX.toggleMute();
+
+    // Hidden: powerup toggle (P) — a pure-combat run for the true master.
+    // Works anytime; toggling OFF clears any pickups already on the field but
+    // never strips a weapon/shield the player already holds.
+    if (inp.tapped('KeyP')) {
+      this.powerupsDisabled = !this.powerupsDisabled;
+      if (this.powerupsDisabled) this.powerups.length = 0;
+      SFX.menuSelect();
+      this.banner(this.powerupsDisabled ? 'POWERUPS DISABLED' : 'POWERUPS RESTORED', 70);
+    }
 
     switch (this.state) {
       case STATE.MENU:
@@ -655,7 +666,7 @@ class GameEngine {
     this.score += 100;
     SFX.enemyKill();
     this.spawnBurst(e.x + e.w / 2, e.y + e.h / 2, e.color, 8);
-    if (e.drop) {
+    if (e.drop && !this.powerupsDisabled) {
       // Spawn the power-up where the foe fell.
       if (this.level.mode === MODE.DEPTH) {
         const pr = this.level.proj.project(e.lane, e.z);

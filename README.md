@@ -32,6 +32,7 @@ Press **ENTER** on the title screen to begin.
 | **K** | Jump |
 | **Space** | Pause / resume |
 | **M** | Mute / unmute all audio (persists across reloads) |
+| **P** | Toggle power-ups on/off — a hidden pure-combat mode (see Power-ups) |
 | **Enter** | Start game / return to menu from an end screen |
 
 Aiming is decoupled from movement: run one way while firing another, in any of
@@ -78,6 +79,14 @@ status boost, not a weapon, so it leaves whatever you are wielding intact.
 | **L** | Light-Ring Laser | Slow, massive ring that pierces walls and enemies |
 | **F** | Flame Spit | Short-range, high-DPS stream — melts foes up close, useless at range |
 | **B** | Barrier | Temporary invulnerability — keeps your current weapon |
+
+### Pure-combat mode (hidden)
+
+Press **P** at any time — on the menu or mid-battle — to disable all power-up
+drops for a bare-handed run. Enemies stop dropping pickups (the Barrier shield
+included), and any pickup already on the field is swept away; a weapon you are
+already holding is left untouched. Press **P** again to restore drops. The
+setting is runtime-only and resets when the page reloads.
 
 ## Scoring & lives
 
