@@ -308,7 +308,7 @@ class SorceressStratos {
     // Sorceress teleports around; vulnerable only after Stratos falls.
     this.sorc = {
       x: cx - 40, y: groundY - 110, w: 16, h: 30, hp: 22, maxHp: 22,
-      tpT: 120, boltT: 80, hurtT: 0,
+      tpT: 120, boltT: 80, hurtT: 0, bolt: null,
     };
     this.maxHp = this.stratos.maxHp + this.sorc.maxHp;
   }
@@ -347,14 +347,21 @@ class SorceressStratos {
       q.y = this.groundY - rand(60, 140);
       this.engine.spawnBurst(q.x + q.w / 2, q.y + q.h / 2, PAL.purple, 10);
     }
+    // Only one bolt haunts the screen at a time: hold off until the last one
+    // has struck home, flown offscreen (culled -> dead), or expired.
     if (--q.boltT <= 0) {
-      q.boltT = this.stratos.alive ? randInt(90, 140) : randInt(55, 85);
-      const b = new Projectile(q.x + q.w / 2, q.y + q.h / 2, 0, 0, {
-        kind: 'bolt', r: 4, color: PAL.purple, life: 240, dmg: 1, homing: 0.035,
-      });
-      const a = Math.atan2((p.y + p.h / 2) - b.y, (p.x + p.w / 2) - b.x);
-      b.vx = Math.cos(a) * 2.4; b.vy = Math.sin(a) * 2.4;
-      this.engine.enemyShots.push(b);
+      if (!q.bolt || q.bolt.dead) {
+        q.boltT = this.stratos.alive ? randInt(90, 140) : randInt(55, 85);
+        const b = new Projectile(q.x + q.w / 2, q.y + q.h / 2, 0, 0, {
+          kind: 'bolt', r: 4, color: PAL.purple, life: 240, dmg: 1, homing: 0.035,
+          homingKeepSpeed: true,
+        });
+        const a = Math.atan2((p.y + p.h / 2) - b.y, (p.x + p.w / 2) - b.x);
+        b.vx = Math.cos(a) * 2.4; b.vy = Math.sin(a) * 2.4;
+        this.engine.enemyShots.push(b);
+        q.bolt = b;
+      }
+      // else: prior bolt still lives — retry next frame (boltT stays <= 0).
     }
 
     if (!this.stratos.alive && this.sorc.hp <= 0) this.dead = true;

@@ -558,9 +558,9 @@ class GameEngine {
         case 'homing-turret':
           if (--e.fireT <= 0) {
             e.fireT = randInt(80, 130);
-            // Launch AT the player with a real speed (~2). The homing lerp keeps
-            // the current magnitude, so the initial launch speed IS the flight
-            // speed — a 0.5 dribble homed on nothing and hit nothing.
+            // Launch AT the player with a real speed (~2). This bolt does NOT
+            // opt into homingKeepSpeed, so its steering lerp bleeds speed over
+            // successive turns exactly as before — Level 3 balance is untouched.
             const a = Math.atan2((p.y + p.h / 2) - (e.y + e.h / 2), p.x - e.x);
             this.enemyShots.push(new Projectile(e.x + e.w / 2, e.y + e.h / 2,
               Math.cos(a) * 2, Math.sin(a) * 2,

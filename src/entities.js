@@ -71,6 +71,10 @@ class Projectile {
     this.dmg = opts.dmg || 1;
     this.grow = opts.grow || 0;
     this.homing = opts.homing || 0;
+    // Opt-in: renormalize the steering result each frame so the bolt holds a
+    // constant speed. Off by default, so a projectile's homing behavior is
+    // never changed unless it explicitly asks for it.
+    this.homingKeepSpeed = !!opts.homingKeepSpeed;
     this.dead = false;
     this.hitSet = new Set();  // for piercing: don't double-hit an enemy
     this.rot = 0;
@@ -86,8 +90,19 @@ class Projectile {
       const tx = p.x + p.w / 2, ty = p.y + p.h / 2;
       const a = Math.atan2(ty - this.y, tx - this.x);
       const spd = Math.hypot(this.vx, this.vy) || 2;
-      this.vx = lerp(this.vx, Math.cos(a) * spd, this.homing);
-      this.vy = lerp(this.vy, Math.sin(a) * spd, this.homing);
+      const nvx = lerp(this.vx, Math.cos(a) * spd, this.homing);
+      const nvy = lerp(this.vy, Math.sin(a) * spd, this.homing);
+      if (this.homingKeepSpeed) {
+        // Steering lerps between two equal-length vectors, which shortens the
+        // result (a chord is shorter than the radius) and bleeds speed to zero
+        // over successive turns. Renormalize to hold a constant pace.
+        const nm = Math.hypot(nvx, nvy) || 1;
+        this.vx = (nvx / nm) * spd;
+        this.vy = (nvy / nm) * spd;
+      } else {
+        this.vx = nvx;
+        this.vy = nvy;
+      }
     }
     this.x += this.vx;
     this.y += this.vy;

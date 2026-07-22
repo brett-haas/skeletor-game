@@ -152,6 +152,35 @@ test('Sorceress is warded until Stratos falls, then vulnerable', () => {
   assert.ok(boss.sorc.hp < before, 'vulnerable once Stratos is gone');
 });
 
+test('Sorceress keeps at most ONE homing bolt on screen, re-arming once it clears', () => {
+  const g = createGame();
+  g.loadLevel(1);
+  const boss = new g.classes.SorceressStratos(g.engine, 3000, 200);
+  const bolts = () => g.engine.enemyShots.filter((s) => s.kind === 'bolt');
+
+  // Force the first bolt out this frame.
+  boss.sorc.boltT = 1;
+  boss.update();
+  assert.equal(bolts().length, 1, 'the first bolt fires');
+  const first = bolts()[0];
+  assert.equal(first.homingKeepSpeed, true, 'the Sorceress bolt opts into constant speed');
+
+  // Its cooldown elapses many times over while it still lives -> the gate holds.
+  for (let i = 0; i < 300; i++) boss.update();
+  assert.equal(bolts().length, 1, 'no second bolt is fired while the first is alive');
+  assert.equal(bolts()[0], first, 'still the very same bolt');
+
+  // The bolt leaves the field (a hit, an offscreen cull, or life expiry all set
+  // `dead`). Now she may re-arm.
+  first.dead = true;
+  g.engine.enemyShots = g.engine.enemyShots.filter((s) => !s.dead);
+  boss.sorc.boltT = 1;
+  boss.update();
+  const after = bolts();
+  assert.equal(after.length, 1, 'exactly one bolt again after the first cleared');
+  assert.notEqual(after[0], first, 'and it is a fresh bolt, not the retired one');
+});
+
 test('Sorceress defeat requires killing BOTH; then the boss is dead', () => {
   const g = createGame();
   g.loadLevel(1);
